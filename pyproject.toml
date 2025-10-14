@@ -8,7 +8,10 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "django (>=5.2.7,<6.0.0)"
+    "django (>=5.2.7,<6.0.0)",
+    "django-celery-results (>=2.6.0,<3.0.0)",
+    "redis[hiredis] (>=5.0.1,<6.0.0)",
+    "celery[redis] (>=5.5.3,<6.0.0)",
 ]
 
 [dependency-groups]
@@ -16,8 +19,10 @@ dev = [
     "black (>=25.9.0,<26.0.0)",
     "mypy (>=1.18.2,<2.0.0)",
     "django-stubs[compatible-mypy] (>=5.2.6,<6.0.0)",
-    "aera @ ../AERA",
-    "forj @ ../FORJ"
+]
+local_apps = [
+    "pymap @ modular_apps/Pymap",
+    "aera @ modular_apps/AERA",
 ]
 
 
@@ -25,7 +30,7 @@ dev = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.local_apps.dependencies]
+pymap = {develop = true}
 aera = {develop = true}
-forj = {develop = true}
 
