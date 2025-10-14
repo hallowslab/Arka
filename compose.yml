@@ -1,0 +1,60 @@
+services:
+  redis:
+    image: "docker.io/library/redis:latest"
+    ports:
+      - "6379:6379"
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-forj}
+
+  arka:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: arka
+      args:
+        GROUPNAME: ${CONTAINER_GROUP:-arka}
+        GID: 1002
+        DJANGO_ENV: ${DJANGO_ENV}
+        DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+    command: gunicorn arka.wsgi:application --bind 0.0.0.0:8000
+
+      
+
+  forj:
+    &forj_base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: forj-worker
+      args:
+        GROUPNAME: ${CONTAINER_GROUP:-arka}
+        GID: 1002
+        DJANGO_ENV: ${DJANGO_ENV}
+        DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+    depends_on:
+      - rabbitmq
+    command: /home/forj/.venv/bin/celery -A forj.celery worker -l ${FORJ_LOG_LEVEL:-INFO}
+
+
+  forj-scheduler:
+    <<: *forj_base
+    command: >
+      /bin/sh -c "
+        /home/forj/.venv/bin/celery -A forj.celery beat -l ${FORJ_LOG_LEVEL:-INFO} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
+      "
+    
