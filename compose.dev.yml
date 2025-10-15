@@ -4,7 +4,7 @@ services:
       - ./arka:/home/arka/app/arka/
       - ./forj:/home/arka/app/forj/
       - ./modular_apps:/home/arka/app/modular_apps/
-    # command: /home/arka/.venv/bin/python manage.py runserver 0.0.0.0:8000
+    # command: /home/arka/app/.venv/bin/python manage.py runserver 0.0.0.0:8000
     command: tail -f /dev/null
 
   forj:
@@ -12,7 +12,7 @@ services:
       - ./arka:/home/arka/app/arka/
       - ./forj:/home/arka/app/forj/
       - ./modular_apps:/home/forj/app/modular_apps/
-    #command: /home/forj/.venv/bin/celery -A forj.celery worker -l debug
+    #command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
     command: tail -f /dev/null
 
   forj-scheduler:

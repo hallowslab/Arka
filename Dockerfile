@@ -83,9 +83,11 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
 
 WORKDIR /home/arka/app
 
-COPY --from=builder /app/.venv /home/arka/.venv
-ENV PATH="/home/arka/.venv/bin:$PATH"
+COPY --from=builder /app/.venv /home/arka/app/.venv
+ENV PATH="/home/arka/app/.venv/bin:$PATH"
 
+COPY scripts/init.sh /home/arka/app/init.sh
+COPY scripts/copy_secrets.sh /home/arka/app/copy_secrets.sh
 COPY . .
 
 # fix perms
@@ -94,8 +96,9 @@ RUN chown -R arka:$GROUPNAME /home/arka/app
 USER arka
 
 EXPOSE 8000
-CMD [ "/home/arka/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
+#CMD [ "/home/arka/app/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
 # CMD ["tail", "-f", "/dev/null"]
+ENTRYPOINT [ "/home/arka/app/init.sh" ]
 
 FROM python:3.13-slim AS forj-worker
 
@@ -143,16 +146,13 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
 
 WORKDIR /home/forj/app
 
-COPY --from=builder /app/.venv /home/forj/.venv
-ENV PATH="/home/forj/.venv/bin:$PATH"
+COPY --from=builder /app/.venv /home/forj/app/.venv
+ENV PATH="/home/forj/app/.venv/bin:$PATH"
 
+COPY scripts/copy_secrets.sh /home/arka/app/copy_secrets.sh
 COPY . .
 
 # fix perms
 USER root
 RUN chown -R forj:$GROUPNAME /home/forj/app
 USER forj
-
-EXPOSE 8000
-CMD [ "/home/forj/.venv/bin/celery", "-A", "forj.celery", "worker", "-l", "${WORKER_LOG_LEVEL:-INFO}", "--concurrency=500", "--pool=gevent"]
-# CMD ["tail", "-f", "/dev/null"]
