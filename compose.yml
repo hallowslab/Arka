@@ -16,6 +16,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-forj}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   arka:
     build:
@@ -27,16 +29,20 @@ services:
         GID: 1002
         DJANGO_ENV: ${DJANGO_ENV}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+        STATIC_ROOT: ${STATIC_ROOT}
     ports:
       - "8000:8000"
     depends_on:
       - rabbitmq
+    volumes:
+      - shared_logs:$ARKA_LOGDIR
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
     command: gunicorn arka.wsgi:application --bind 0.0.0.0:8000
 
-      
-
-  forj:
-    &forj_base
+  forj: &forj_base
     build:
       context: .
       dockerfile: Dockerfile
@@ -46,15 +52,29 @@ services:
         GID: 1002
         DJANGO_ENV: ${DJANGO_ENV}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+        STATIC_ROOT: ${STATIC_ROOT}
     depends_on:
       - rabbitmq
+    volumes:
+      - shared_logs:$ARKA_LOGDIR
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    deploy:
+      mode: replicated
+      replicas: ${WORKER_REPLICAS:-1}
     command: /home/forj/.venv/bin/celery -A forj.celery worker -l ${FORJ_LOG_LEVEL:-INFO}
-
 
   forj-scheduler:
     <<: *forj_base
+    deploy:
+      mode: global
     command: >
       /bin/sh -c "
         /home/forj/.venv/bin/celery -A forj.celery beat -l ${FORJ_LOG_LEVEL:-INFO} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
       "
-    
+volumes:
+  static_root:
+  rabbitmq_data:
+  shared_logs:

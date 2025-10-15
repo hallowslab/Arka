@@ -1,8 +1,5 @@
 # Our modular apps
-modular_apps/
-
-# scripts
-scripts/
+**/modular_apps/
 
 # secrets for docker
 config.json

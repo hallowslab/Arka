@@ -28,9 +28,7 @@ ENV PATH="$POETRY_HOME/bin:$PATH"
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock* ./
-
-#COPY modular_apps ./modular_apps
+COPY src/pyproject.toml src/poetry.lock* ./
 
 #RUN poetry install --with dev,local_apps --no-root
 RUN poetry install --without local_apps $(if [ "$DJANGO_ENV" = 'development' ]; then echo '--with dev'; fi) --no-root
@@ -45,7 +43,8 @@ SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 ARG DJANGO_ENV \
     CONTAINER_USER \
     GROUPNAME \
-    GID
+    GID \
+    STATIC_ROOT
 
 # python:
 ENV PYTHONFAULTHANDLER=1 \
@@ -59,7 +58,9 @@ ENV PYTHONFAULTHANDLER=1 \
     POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON=true \
     POETRY_INSTALLER_MAX_WORKERS=10 \
     # APP
-    DJANGO_ENV=${DJANGO_ENV}
+    DJANGO_ENV=${DJANGO_ENV} \
+    STATIC_ROOT=${STATIC_ROOT}
+
 
 RUN if [ "$DJANGO_ENV" = "development" ]; then \
         apt-get update && \
@@ -86,9 +87,9 @@ WORKDIR /home/arka/app
 COPY --from=builder /app/.venv /home/arka/app/.venv
 ENV PATH="/home/arka/app/.venv/bin:$PATH"
 
-COPY scripts/init.sh /home/arka/app/init.sh
-COPY scripts/copy_secrets.sh /home/arka/app/copy_secrets.sh
-COPY . .
+COPY scripts/django_init.sh /home/arka/app/init.sh
+COPY scripts/copy_secrets.sh /home/arka/copy_secrets.sh
+COPY src/ .
 
 # fix perms
 USER root
@@ -96,9 +97,9 @@ RUN chown -R arka:$GROUPNAME /home/arka/app
 USER arka
 
 EXPOSE 8000
-#CMD [ "/home/arka/app/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD [ "/home/arka/app/.venv/bin/python", "manage.py", "runserver", "0.0.0.0:8000"]
 # CMD ["tail", "-f", "/dev/null"]
-ENTRYPOINT [ "/home/arka/app/init.sh" ]
+# ENTRYPOINT [ "/home/arka/app/init.sh" ]
 
 FROM python:3.13-slim AS forj-worker
 
@@ -108,7 +109,8 @@ SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 ARG DJANGO_ENV \
     CONTAINER_USER \
     GROUPNAME \
-    GID
+    GID \
+    STATIC_ROOT
 
 # python:
 ENV PYTHONFAULTHANDLER=1 \
@@ -122,7 +124,9 @@ ENV PYTHONFAULTHANDLER=1 \
     POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON=true \
     POETRY_INSTALLER_MAX_WORKERS=10 \
     # APP
-    DJANGO_ENV=${DJANGO_ENV}
+    DJANGO_ENV=${DJANGO_ENV} \
+    STATIC_ROOT=${STATIC_ROOT}
+
 
 RUN if [ "$DJANGO_ENV" = "development" ]; then \
         apt-get update && \
@@ -149,8 +153,9 @@ WORKDIR /home/forj/app
 COPY --from=builder /app/.venv /home/forj/app/.venv
 ENV PATH="/home/forj/app/.venv/bin:$PATH"
 
-COPY scripts/copy_secrets.sh /home/arka/app/copy_secrets.sh
-COPY . .
+COPY scripts/celery_init.sh /home/forj/app/init.sh
+COPY scripts/copy_secrets.sh /home/forj/app/copy_secrets.sh
+COPY src/ .
 
 # fix perms
 USER root
