@@ -7,10 +7,10 @@ from django.core.management.utils import get_random_secret_key
 
 
 def load_secret_key(
-    environment: str, base_dir: str, key: Optional[str]
+    environment: str, base_dir: Path, key: Optional[str]
 ) -> Optional[str]:
     if environment == "development" and key is None:
-        _secret = Path(base_dir, "dev.secret").resolve()
+        _secret = base_dir / "dev.secret"
         try:
             with open(_secret, "r") as fh:
                 key = " ".join(fh.readlines()).strip()
@@ -21,7 +21,7 @@ def load_secret_key(
                 fh.write(key)
                 print(f"Generated and stored new secret key: {key}")
     elif environment == "production":
-        _secret = Path(base_dir, ".secret").resolve()
+        _secret = base_dir / ".secret"
         try:
             with open(_secret, "r") as fh:
                 key = " ".join(fh.readlines()).strip()

@@ -10,36 +10,60 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+import json
 from pathlib import Path
+from typing import Optional, List
+
+
+from .utils import build_broker_url, check_logdir, load_secret_key
+from .logging import load_logging_defaults
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Environment mode
+# Default: production
+DJANGO_ENV: str = os.environ.get("DJANGO_ENV", "production").lower()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-9zs%5=$b6-dgiz59b=z!tk_@#=#o+b!k9m^k5!gfu=_eka0(w2"
+# Default: None, set in development, loaded in production
+SECRET_KEY: Optional[str] = None
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Default: From DJANGO_ENV
+DEBUG: bool = True if DJANGO_ENV == "development" else False
+# Do not allow Debug to be set in production environment
+if DEBUG and DJANGO_ENV == "production":
+    raise ValueError("Do not use DEBUG in production!!")
 
-ALLOWED_HOSTS = []
+# Application log directory
+ARKA_LOGDIR: Optional[str] = os.environ.get("ARKA_LOGDIR", None)
+if ARKA_LOGDIR is None:
+    ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
+
+ALLOWED_HOSTS: List[str] = []
 
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS: List[str] = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_celery_results",
+    "forj",
+    "pymap",
+    "aera",
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -79,6 +103,23 @@ DATABASES = {
     }
 }
 
+# Cache
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+    },
+    "dbcache": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "my_cache_table",
+    },
+}
+
+# Logging
+# https://docs.djangoproject.com/en/5.2/topics/logging/
+LOGGING = load_logging_defaults(ARKA_LOGDIR)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -115,8 +156,43 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.getenv("STATIC_ROOT", None)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Celery configs
+# https://docs.celeryq.dev/en/stable/django/index.html
+
+CELERY_BROKER_URL: Optional[str] = None
+CELERY_TIMEZONE = "Europe/Lisbon"
+CELERY_RESULT_BACKEND: str = "django-db"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+# CELERY_TASK_TRACK_STARTED: bool = True
+# CELERY_TASK_ALWAYS_EAGER: bool = True # Set True for local testing without a worker
+
+# Custom config
+CUSTOM_CONFIG = {}
+CONFIG_FILE = BASE_DIR / "config.json" if DJANGO_ENV == "production" else BASE_DIR / "config.dev.json"
+if CONFIG_FILE.exists():
+    with open(CONFIG_FILE) as f:
+        CUSTOM_CONFIG = json.load(f)
+
+
+# Config overrides
+ALLOWED_HOSTS = CUSTOM_CONFIG.get("ALLOWED_HOSTS", ALLOWED_HOSTS)
+# CSRF_TRUSTED_ORIGINS = CUSTOM_CONFIG.get("CSRF_TRUSTED_ORIGINS", CSRF_TRUSTED_ORIGINS)
+CACHES = CUSTOM_CONFIG.get("CACHES", CACHES)
+LOGGING = CUSTOM_CONFIG.get("LOGGING", LOGGING)
+DATABASES = CUSTOM_CONFIG.get("DATABASES", DATABASES)
+
+if not DEBUG:
+    try:
+        SECRET_KEY = load_secret_key(DJANGO_ENV, BASE_DIR, SECRET_KEY)
+        check_logdir(ARKA_LOGDIR)
+    except Exception as e:
+        raise e

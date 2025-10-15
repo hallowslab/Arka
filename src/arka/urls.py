@@ -20,6 +20,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("FORJ/", include("forj.urls")),
+    path("PYMAP/", include("pymap.urls")),
     path("AERA/", include("aera.urls")),
-    path("FORJ/", include("forj.urls"))
 ]
