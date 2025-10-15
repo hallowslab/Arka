@@ -1,3 +1,19 @@
+# Our modular apps
+modular_apps/
+
+# scripts
+scripts/
+
+# secrets for docker
+config.json
+config.dev.json
+.pgpass
+.pg_service.conf
+.secret
+
+# ARKA_LOGS
+ARKA_LOGS/
+
 # Git
 .git
 .gitignore
