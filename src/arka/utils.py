@@ -1,41 +1,33 @@
+import os
+import json
 import tempfile
-from typing import Optional
+from typing import Optional,Any
 from pathlib import Path
 from urllib.parse import quote
+from importlib.util import find_spec
 
-from django.core.management.utils import get_random_secret_key
+def app_exists(name):
+    return find_spec(name) is not None
 
 
 def load_secret_key(
-    environment: str, base_dir: Path, key: Optional[str]
+    environment: str, base_dir: Path
 ) -> Optional[str]:
-    if environment == "development" and key is None:
-        _secret = base_dir / "dev.secret"
-        try:
-            with open(_secret, "r") as fh:
-                key = " ".join(fh.readlines()).strip()
-                print(f"Loaded development secret: {key}")
-        except OSError:
-            with open(_secret, "w") as fh:
-                key = get_random_secret_key()
-                fh.write(key)
-                print(f"Generated and stored new secret key: {key}")
-    elif environment == "production":
-        _secret = base_dir / ".secret"
-        try:
-            with open(_secret, "r") as fh:
-                key = " ".join(fh.readlines()).strip()
-                print(f"Loaded production secret: {key[:5]}....")
-        except (OSError, FileNotFoundError) as e:
-            raise e
+    key = None
+    _secret = base_dir / ".secret"
+    try:
+        with open(_secret, "r") as fh:
+            key = " ".join(fh.readlines()).strip()
+            print(f"Loaded production secret: {key[:5]}....")
+    except (OSError, FileNotFoundError) as e:
+        raise e
     if key:
         print(f"Loaded secret: {key[:5]}....")
         return key
     else:
         raise ValueError(
-            f"Secret key was neither read nor generated: DJANGO_ENV:{environment}, BASE_DIR:{base_dir}, SECRET_KEY:{key}"
+            f"Could not read secret key: DJANGO_ENV:{environment}, BASE_DIR:{base_dir}, SECRET_KEY:{key}"
         )
-
 
 def build_broker_url(config: dict[str, str]) -> str:
     """
@@ -49,8 +41,7 @@ def build_broker_url(config: dict[str, str]) -> str:
     vhost = quote(config.get("vhost", "/"), safe="")
     return f"{scheme}://{username}:{password}@{host}:{port}/{vhost}"
 
-
-def check_logdir(logdir: str):
+def check_logdir(logdir: Optional[str]):
     """
     Validates log directory:
         - exists
@@ -61,6 +52,8 @@ def check_logdir(logdir: str):
         - Does not exist, create, if fail catch OSError as PermissionError
         - Isn't writeable raise PermissionError
     """
+    if not logdir:
+        raise ValueError(f"Log directory value was not specified, ARKA_LOGDIR:{logdir}")
     p = Path(logdir)
     # Is not a directory raise
     if p.exists() and not p.is_dir():
@@ -80,3 +73,20 @@ def check_logdir(logdir: str):
     # Raise a permission error for clarity (not writeable)
     except OSError as e:
         raise PermissionError(f"Cannot write to log directory {p}") from e
+
+def load_config_file(environment:str,base_dir: Path)->Any:
+    """
+    Loads json config file:
+        - First checks if environment variable is set if so load that path
+        - Else uses predefined paths to load the file
+        - If the path does not exist returns an empty set 
+    """
+    config_file = os.environ.get("ARKA_CONFIG_FILE", None)
+    if config_file:
+        config_path = Path(config_file)
+    else:
+        config_path = base_dir / "config.json" if environment == "production" else base_dir / "config.dev.json"
+    if config_path.exists():
+        with open(config_path) as f:
+            return json.load(f)
+    return {}

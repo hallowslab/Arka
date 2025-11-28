@@ -11,12 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
-import json
 from pathlib import Path
 from typing import Optional, List
 
+from django.utils.log import DEFAULT_LOGGING
 
-from .utils import build_broker_url, check_logdir, load_secret_key
+from .utils import build_broker_url, check_logdir, load_secret_key, load_config_file, app_exists
 from .logging import load_logging_defaults
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,8 +30,11 @@ DJANGO_ENV: str = os.environ.get("DJANGO_ENV", "production").lower()
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Default: None, set in development, loaded in production
-SECRET_KEY: Optional[str] = None
+# Load secret key early
+if DJANGO_ENV == "production":
+    SECRET_KEY = load_secret_key(DJANGO_ENV, BASE_DIR)
+else:
+    SECRET_KEY = "!dev-secret-key!"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Default: From DJANGO_ENV
@@ -40,13 +43,13 @@ DEBUG: bool = True if DJANGO_ENV == "development" else False
 if DEBUG and DJANGO_ENV == "production":
     raise ValueError("Do not use DEBUG in production!!")
 
-# Application log directory
-ARKA_LOGDIR: Optional[str] = os.environ.get("ARKA_LOGDIR", None)
-if ARKA_LOGDIR is None:
-    ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
-
 ALLOWED_HOSTS: List[str] = []
 
+CSRF_TRUSTED_ORIGINS: List[str] = []
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "/login/"
 
 # Application definition
 
@@ -58,10 +61,14 @@ INSTALLED_APPS: List[str] = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_celery_results",
+    "arka",
     "forj",
-    "pymap",
-    "aera",
 ]
+if app_exists("pymap"):
+    INSTALLED_APPS.append("pymap")
+
+if app_exists("aera"):
+    INSTALLED_APPS.append("aera")
 
 MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",
@@ -78,7 +85,7 @@ ROOT_URLCONF = "arka.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -118,7 +125,20 @@ CACHES = {
 
 # Logging
 # https://docs.djangoproject.com/en/5.2/topics/logging/
-LOGGING = load_logging_defaults(ARKA_LOGDIR)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
+
 
 
 # Password validation
@@ -156,6 +176,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = os.getenv("STATIC_ROOT", None)
 
 # Default primary key field type
@@ -175,24 +196,30 @@ CELERY_TASK_SERIALIZER = "json"
 # CELERY_TASK_TRACK_STARTED: bool = True
 # CELERY_TASK_ALWAYS_EAGER: bool = True # Set True for local testing without a worker
 
+# Application log directory
+ARKA_LOGDIR: Optional[str] = os.environ.get("ARKA_LOGDIR", None)
+if ARKA_LOGDIR is None:
+    ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
+
 # Custom config
-CUSTOM_CONFIG = {}
-CONFIG_FILE = BASE_DIR / "config.json" if DJANGO_ENV == "production" else BASE_DIR / "config.dev.json"
-if CONFIG_FILE.exists():
-    with open(CONFIG_FILE) as f:
-        CUSTOM_CONFIG = json.load(f)
+CUSTOM_CONFIG = load_config_file(DJANGO_ENV, BASE_DIR)
 
 
-# Config overrides
-ALLOWED_HOSTS = CUSTOM_CONFIG.get("ALLOWED_HOSTS", ALLOWED_HOSTS)
-# CSRF_TRUSTED_ORIGINS = CUSTOM_CONFIG.get("CSRF_TRUSTED_ORIGINS", CSRF_TRUSTED_ORIGINS)
-CACHES = CUSTOM_CONFIG.get("CACHES", CACHES)
-LOGGING = CUSTOM_CONFIG.get("LOGGING", LOGGING)
-DATABASES = CUSTOM_CONFIG.get("DATABASES", DATABASES)
-
-if not DEBUG:
+if DJANGO_ENV == "production":
+    # Config overrides
+    print(f"LOGDIR: {ARKA_LOGDIR}")
+    ARKA_LOGDIR = CUSTOM_CONFIG.get("ARKA_LOGDIR", ARKA_LOGDIR)
+    print(f"LOGDIR: {ARKA_LOGDIR}")
+    DATABASES.update(CUSTOM_CONFIG.get("DATABASES", DATABASES))
+    CACHES.update(CUSTOM_CONFIG.get("CACHES", CACHES))
+    if ARKA_LOGDIR: LOGGING.update(CUSTOM_CONFIG.get("LOGGING", load_logging_defaults(ARKA_LOGDIR)))
+    ALLOWED_HOSTS = CUSTOM_CONFIG.get("ALLOWED_HOSTS", ALLOWED_HOSTS)
+    CSRF_TRUSTED_ORIGINS = CUSTOM_CONFIG.get("CSRF_TRUSTED_ORIGINS", CSRF_TRUSTED_ORIGINS)
+    CELERY_BROKER_URL = CUSTOM_CONFIG.get("CELERY_BROKER_URL", CELERY_BROKER_URL)
+    CELERY_RESULT_BACKEND = CUSTOM_CONFIG.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
     try:
-        SECRET_KEY = load_secret_key(DJANGO_ENV, BASE_DIR, SECRET_KEY)
         check_logdir(ARKA_LOGDIR)
+        if STATIC_ROOT is None:
+            raise ValueError(f"Static root is not define: {STATIC_ROOT}")
     except Exception as e:
         raise e
