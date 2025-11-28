@@ -9,6 +9,9 @@ config.dev.json
 # ARKA_LOGS
 ARKA_LOGS/
 
+# Javascript
+node_modules/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
