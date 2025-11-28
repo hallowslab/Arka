@@ -2,20 +2,26 @@ services:
   rabbitmq:
     volumes:
       - rabbitmq_data_dev:/var/lib/rabbitmq
-
+  postgres:
+    volumes:
+      - pgdata_dev:/var/lib/postgresql
   arka:
     volumes:
       - shared_logs_dev:$ARKA_LOGDIR
+      - static_root_dev:$STATIC_ROOT
       - ./src/arka:/home/arka/app/arka/
+      - ./src/templates:/home/arka/app/templates
       - ./src/forj:/home/arka/app/forj/
       - ./src/modular_apps:/home/arka/app/modular_apps/
-    # command: /home/arka/app/.venv/bin/python manage.py runserver 0.0.0.0:8000
-    command: tail -f /dev/null
+    command: bash -c '/home/arka/app/init.sh & tail -f /dev/null'
+    # command: tail -f /dev/null
 
   forj:
     volumes:
       - shared_logs_dev:$ARKA_LOGDIR
+      - static_root_dev:$STATIC_ROOT
       - ./src/arka:/home/arka/app/arka/
+      - ./src/templates:/home/arka/app/templates
       - ./src/forj:/home/arka/app/forj/
       - ./src/modular_apps:/home/forj/app/modular_apps/
     #command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
@@ -25,6 +31,7 @@ services:
     command: tail -f /dev/null
 
 volumes:
+  pgdata_dev:
   static_root_dev:
   rabbitmq_data_dev:
   shared_logs_dev:

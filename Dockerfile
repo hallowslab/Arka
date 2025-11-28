@@ -41,10 +41,11 @@ FROM python:3.13-slim AS arka
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 ARG DJANGO_ENV \
-    CONTAINER_USER \
     GROUPNAME \
     GID \
-    STATIC_ROOT
+    STATIC_ROOT \
+    ARKA_LOGDIR
+
 
 # python:
 ENV PYTHONFAULTHANDLER=1 \
@@ -72,6 +73,14 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
 # create user+group
 RUN addgroup --gid $GID $GROUPNAME \
     && adduser --disabled-password --gecos '' --uid 1001 --gid $GID arka
+
+# Create the log directory and add permissions to user and group
+RUN mkdir -p $ARKA_LOGDIR
+RUN touch "$ARKA_LOGDIR/arka-dev.log" "$ARKA_LOGDIR/pymap.log"
+RUN chown -R arka:$GROUPNAME $ARKA_LOGDIR && chmod -R g+rw $ARKA_LOGDIR
+# Fix perms on static root for asset collection
+RUN mkdir -p $STATIC_ROOT
+RUN chown -R arka:$GROUPNAME $STATIC_ROOT && chmod -R g+rw $STATIC_ROOT
 
 # switch to user
 USER arka
@@ -107,10 +116,10 @@ FROM python:3.13-slim AS forj-worker
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 ARG DJANGO_ENV \
-    CONTAINER_USER \
     GROUPNAME \
     GID \
-    STATIC_ROOT
+    STATIC_ROOT \
+    ARKA_LOGDIR
 
 # python:
 ENV PYTHONFAULTHANDLER=1 \
@@ -139,6 +148,11 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
 RUN addgroup --gid $GID $GROUPNAME \
     && adduser --disabled-password --gecos '' --uid 1001 --gid $GID forj
     
+# Create the log directory and add permissions to user and group
+RUN mkdir -p $ARKA_LOGDIR
+RUN touch "$ARKA_LOGDIR/arka-dev.log" "$ARKA_LOGDIR/pymap.log"
+RUN chown -R forj:$GROUPNAME $ARKA_LOGDIR && chmod -R g+rw $ARKA_LOGDIR
+
 # switch to user
 USER forj
 

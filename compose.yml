@@ -1,16 +1,17 @@
 services:
+  # ---------- Cache ----------
   redis:
     image: "docker.io/library/redis:latest"
     ports:
       - "6379:6379"
     restart: always
-
+  # ---------- Broker ----------
   rabbitmq:
     image: rabbitmq:4-management
     ports:
       - "5672:5672"
       - "15672:15672"
-    container_name: rabbitmq
+    container_name: rabbitmq-arka
     hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
@@ -18,7 +19,21 @@ services:
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-forj}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-
+  # ---------- DB ----------
+  postgres:
+    image: "docker.io/library/postgres:latest"
+    ports:
+      - "5432:5432"
+    hostname: postgres-arka
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-arka}
+      POSTGRES_USER: ${POSTGRES_USER:-arka}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST:-127.0.0.1}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    volumes:
+      - pgdata:/var/lib/postgresql
+  # ---------- Arka-django ----------
   arka:
     build:
       context: .
@@ -30,6 +45,7 @@ services:
         DJANGO_ENV: ${DJANGO_ENV}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
         STATIC_ROOT: ${STATIC_ROOT}
+        ARKA_LOGDIR: ${ARKA_LOGDIR}
     ports:
       - "8000:8000"
     depends_on:
@@ -41,7 +57,7 @@ services:
         target: /run/secrets
         read_only: true
     command: gunicorn arka.wsgi:application --bind 0.0.0.0:8000
-
+  # ---------- Forj-celery ----------
   forj: &forj_base
     build:
       context: .
@@ -53,6 +69,7 @@ services:
         DJANGO_ENV: ${DJANGO_ENV}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
         STATIC_ROOT: ${STATIC_ROOT}
+        ARKA_LOGDIR: ${ARKA_LOGDIR}
     depends_on:
       - rabbitmq
     volumes:
@@ -65,7 +82,7 @@ services:
       mode: replicated
       replicas: ${WORKER_REPLICAS:-1}
     command: /home/forj/.venv/bin/celery -A forj.celery worker -l ${FORJ_LOG_LEVEL:-INFO}
-
+  # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base
     deploy:
@@ -75,6 +92,7 @@ services:
         /home/forj/.venv/bin/celery -A forj.celery beat -l ${FORJ_LOG_LEVEL:-INFO} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
       "
 volumes:
+  pgdata:
   static_root:
   rabbitmq_data:
   shared_logs:
