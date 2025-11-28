@@ -6,7 +6,7 @@ authors = [
     {name = "hallowslab",email = "hallows.tech.lab@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<4.0"
 dependencies = [
     "django (>=5.2.7,<6.0.0)",
     "django-celery-results (>=2.6.0,<3.0.0)",
@@ -19,11 +19,19 @@ dev = [
     "black (>=25.9.0,<26.0.0)",
     "mypy (>=1.18.2,<2.0.0)",
     "django-stubs[compatible-mypy] (>=5.2.6,<6.0.0)",
+    "taskipy (>=1.14.1,<2.0.0)",
+    "ruff (>=0.14.7,<0.15.0)",
 ]
 local_apps = [
     "pymap @ modular_apps/Pymap",
     "aera @ modular_apps/AERA",
 ]
+
+[tool.taskipy.tasks]
+lint = "task lint_ruff && task lint_black && task lint_mypy"
+lint_black = "black ."
+lint_ruff = "ruff check"
+lint_mypy = "mypy src"
 
 
 [build-system]
