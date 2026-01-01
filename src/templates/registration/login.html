@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login@ARKA</title>
+
+    <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
+    <link rel="stylesheet" href="{% static 'css/display.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
+    <style>
+        .login-container { max-width: 420px; width: 100%; }
+    </style>
+</head>
+<body class="has-background-light has-text-dark">
+
+{% include "partials/theme_toggle.html" %}
+
+<section class="section full-height">
+    <div class="login-container">
+
+        <div class="has-text-centered mb-5">
+            <h1 class="title is-3">ARKA</h1>
+            <p class="subtitle is-6">Please sign in to continue</p>
+        </div>
+
+        <div class="box">
+
+            {% if form.errors %}
+                <div class="notification is-danger is-light mb-4">
+                    Invalid username or password.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="field">
+                    <label class="label is-small">Username</label>
+                    <div class="control">
+                        <input class="input" type="text" name="username" required autofocus>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label is-small">Password</label>
+                    <div class="control">
+                        <input class="input" type="password" name="password" required>
+                    </div>
+                </div>
+
+                <div class="field mt-5">
+                    <button class="button is-primary is-fullwidth">
+                        Log In
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</section>
+
+</body>
+</html>

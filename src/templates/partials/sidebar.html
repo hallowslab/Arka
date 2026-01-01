@@ -1,0 +1,57 @@
+<aside id="sidebar" class="sidebar">
+    <div class="p-4">
+        <h1 class="title is-4 has-text-white">ARKALOGO</h1>
+    </div>
+
+    <nav class="menu px-3">
+    <ul class="menu-list">
+        <li>
+            <a href="/" class="py-2">
+                <span class="icon">📊</span>
+                <span class="menu-text">Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="/FORJ" class="py-2">
+                <span class="icon">📊</span>
+                <span class="menu-text">FÖᚱJ</span>
+            </a>
+        </li>
+        <li>
+            <a href="/PYMAP" class="py-2">
+                <span class="icon">📈</span>
+                <span class="menu-text">Pymap</span>
+            </a>
+        </li>
+        <li>
+            <a href="/AERA" class="py-2">
+                <span class="icon">⚙</span>
+                <span class="menu-text">ÆRA</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+
+    <div class="mt-auto p-4 has-text-centered is-size-7 has-text-grey-light">
+        arka@v{{ PROJECT_VERSION }}
+
+        <div>
+            {{ APP_NAME }}@v{{ APP_VERSION }}
+        </div>
+    </div>
+</aside>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("content");
+    const btn = document.getElementById("toggleBtn");
+
+    if (sidebar && content && btn) {
+        btn.addEventListener("click", () => {
+            sidebar.classList.toggle("sidebar-collapsed");
+            content.classList.toggle("content-collapsed");
+        });
+    }
+});
+</script>
