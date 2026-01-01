@@ -1,0 +1,83 @@
+/* Sidebar layout */
+.sidebar {
+    width: 240px;
+    background: #1e1e1e;
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    transition: width 0.3s ease;
+}
+
+.sidebar a {
+    color: white;
+    text-decoration: none;
+}
+
+/* Sidebar collapsed */
+.sidebar.sidebar-collapsed {
+    width: 70px !important;
+}
+
+/* Top logo/title */
+.sidebar .title {
+    max-width: 240px;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 1;
+    transition: max-width 0.3s ease, opacity 0.3s ease;
+}
+
+/* Menu items */
+.menu-list a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: justify-content 0.3s ease;
+}
+
+/* Menu text */
+.menu-text {
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    max-width: 200px;
+    opacity: 1;
+    transition: max-width 0.3s ease, opacity 0.3s ease;
+}
+
+/* Collapsed menu text */
+.sidebar.sidebar-collapsed .menu-text {
+    max-width: 0;
+    opacity: 0;
+}
+
+/* Center icons when collapsed */
+.sidebar.sidebar-collapsed .menu-list a {
+    justify-content: center;
+}
+
+/* Content wrapper */
+.content-wrapper {
+    margin-left: 240px;
+    transition: margin-left 0.3s ease;
+}
+
+.content-collapsed {
+    margin-left: 70px !important;
+}
+
+/* Topbar */
+.topbar {
+    height: 56px;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}

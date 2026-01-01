@@ -1,0 +1,32 @@
+/* elements for dark mode */
+body.has-background-dark .box {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.has-background-dark input.input {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+body.has-background-dark .notification {
+    background-color: #2c2c2c;
+    color: #fff;
+}
+
+
+/* Overrides .title { color: var(--bulma-title-color); } */
+body.has-background-light.has-text-dark .title {
+    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
+}
+body.has-background-dark.has-text-light .title {
+    color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
+}
+/* Overrides .subtitle { color: var(--bulma-title-color); } */
+body.has-background-light.has-text-dark .subtitle {
+    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
+}
+body.has-background-dark.has-text-light .subtitle {
+    color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
+}
