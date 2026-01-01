@@ -17,10 +17,38 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from .utils import app_exists
+from . import views
 
 urlpatterns = [
+    # Administration
     path("admin/", admin.site.urls),
+    # Forj/celery
     path("FORJ/", include("forj.urls")),
-    path("PYMAP/", include("pymap.urls")),
-    path("AERA/", include("aera.urls")),
+    # Atuhentication
+    path(
+        "login/",
+        auth_views.LoginView.as_view(
+            template_name="registration/login.html",
+            redirect_authenticated_user=True,
+        ),
+        name="login",
+    ),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("password_change/", auth_views.PasswordChangeView.as_view(), name="password_change"),
+    path("password_change/done/", auth_views.PasswordChangeDoneView.as_view(), name="password_change_done"),
+    # Base site
+    path("", views.dashboard, name="dashboard"),
+    path("profile/", views.profile, name="user_profile"),
 ]
+
+# Modular apps
+if app_exists("pymap"):
+    urlpatterns.append(
+        path("PYMAP/", include(("pymap.urls", "pymap"), namespace="pymap"))
+    )
+if app_exists("aera"):
+    urlpatterns.append(
+        path("AERA/", include(("aera.urls", "aera"), namespace="aera"))
+    )
