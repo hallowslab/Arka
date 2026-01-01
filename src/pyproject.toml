@@ -21,13 +21,18 @@ dev = [
     "django-stubs[compatible-mypy] (>=5.2.6,<6.0.0)",
     "taskipy (>=1.14.1,<2.0.0)",
     "ruff (>=0.14.7,<0.15.0)",
+    "poetry-version-exporter @ https://github.com/hallowslab/poetry-version-exporter/releases/download/v0.1.4/poetry_version_exporter-0.1.4-py3-none-any.whl",
 ]
 local_apps = [
     "pymap @ modular_apps/Pymap",
     "aera @ modular_apps/AERA",
 ]
 
+[tool.poetry.scripts]
+export-version = "poetry_version_exporter.cli:main"
+
 [tool.taskipy.tasks]
+export-versions = "poetry run export-version -n arka -o arka/_version.py && poetry run export-version -n aera -o modular_apps/AERA/_version.py && poetry run export-version -n pymap -o modular_apps/Pymap/_version.py"
 lint = "task lint_ruff && task lint_black && task lint_mypy"
 lint_black = "black ."
 lint_ruff = "ruff check"
