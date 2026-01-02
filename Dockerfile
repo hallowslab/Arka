@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y pipx \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
     
-RUN pipx install poetry 
+RUN pipx install poetry
 
 ENV PATH="/root/.local/bin:$PATH"
 ENV PATH="$POETRY_HOME/bin:$PATH"
@@ -31,7 +31,7 @@ WORKDIR /app
 COPY src/pyproject.toml src/poetry.lock* ./
 
 #RUN poetry install --with dev,local_apps --no-root
-RUN poetry install --without local_apps $(if [ "$DJANGO_ENV" = 'development' ]; then echo '--with dev'; fi) --no-root
+RUN poetry sync --without local_apps $(if [ "$DJANGO_ENV" = 'development' ]; then echo '--with dev'; fi) --no-root
 
 #COPY . .
 
