@@ -35,9 +35,11 @@
     <div class="mt-auto p-4 has-text-centered is-size-7 has-text-grey-light">
         arka@v{{ PROJECT_VERSION }}
 
-        <div>
-            {{ APP_NAME }}@v{{ APP_VERSION }}
-        </div>
+        {% if APP_NAME %}
+            <div>
+                {{ APP_NAME }}@v{{ APP_VERSION }}
+            </div>
+        {% endif %}
     </div>
 </aside>
 
