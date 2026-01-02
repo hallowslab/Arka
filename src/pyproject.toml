@@ -1,6 +1,6 @@
 [project]
 name = "arka"
-version = "0.0.1"
+version = "0.0.3"
 description = ""
 authors = [
     {name = "hallowslab",email = "hallows.tech.lab@gmail.com"}
@@ -32,7 +32,7 @@ local_apps = [
 export-version = "poetry_version_exporter.cli:main"
 
 [tool.taskipy.tasks]
-export-versions = "poetry run export-version -n arka -o arka/_version.py && poetry run export-version -n aera -o modular_apps/AERA/_version.py && poetry run export-version -n pymap -o modular_apps/Pymap/_version.py"
+export-versions = "poetry run export-version -n arka -o arka/_version.py && poetry run export-version -n aera -o modular_apps/AERA/aera/_version.py && poetry run export-version -n pymap -o modular_apps/Pymap/pymap/_version.py"
 lint = "task lint_ruff && task lint_black && task lint_mypy"
 lint_black = "black ."
 lint_ruff = "ruff check"
