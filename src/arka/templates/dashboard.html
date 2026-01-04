@@ -3,7 +3,78 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">Dashboard</h1>
+<div class="columns is-multiline">
+    <div class="column is-one-third">
+        <!-- Database card -->
+         <div class="card mb-4 is-clickable">
+            <div class="card-content">
+                <div class="level mb-2">
+                    <div class="level-left">
+                        <p class="title is-5">Database</p>
+                    </div>
+                    <div class="level-right">
+                        {% if checks.database.status == "ok" %}
+                            <span class="tag is-success">OK</span>
+                        {% else %}
+                            <span class="tag is-danger">ERROR</span>
+                        {% endif %}
+                    </div>
+                </div>
 
-<p>Welcome to your dashboard.</p>
+                <p class="is-size-7">
+                    {{ checks.database.message }}
+                </p>
+            </div>
+        </div>
+
+    </div>
+    <div class="column is-one-third">
+        <!-- Redis card -->
+         <div class="card mb-4 is-clickable">
+            <div class="card-content">
+                <div class="level mb-2">
+                    <div class="level-left">
+                        <p class="title is-5">Redis</p>
+                    </div>
+                    <div class="level-right">
+                        {% if checks.redis.status == "ok" %}
+                            <span class="tag is-success">OK</span>
+                        {% else %}
+                            <span class="tag is-danger">ERROR</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p class="is-size-7">
+                    {{ checks.redis.message }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="column is-one-third">
+        <!-- RabbitMQ card -->
+         <a href="{% url 'forj:checks' %}" class="card mb-4 is-clickable">
+            <div class="card-content">
+                <div class="level mb-2">
+                    <div class="level-left">
+                        <p class="title is-5">RabbitMQ / FORJ</p>
+                    </div>
+                    <div class="level-right">
+                        {% if checks.rabbitmq.status == "ok" %}
+                            <span class="tag is-success">OK</span>
+                        {% elif checks.rabbitmq.status == "warning" %}
+                            <span class="tag is-warning">WARNING</span>
+                        {% else %}
+                            <span class="tag is-danger">ERROR</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p class="is-size-7">
+                    {{ checks.rabbitmq.message }}
+                </p>
+            </div>
+        </a>
+    </div>
+</div>
 {% endblock %}
