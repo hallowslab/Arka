@@ -26,8 +26,8 @@ services:
       - ./src/static:/home/forj/app/static
       - ./src/forj:/home/forj/app/forj/
       - ./src/modular_apps:/home/forj/app/modular_apps/
-    #command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
-    command: tail -f /dev/null
+    # command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
+    command: bash -c '/home/forj/app/init.sh & tail -f /dev/null'
 
   forj-scheduler:
     command: tail -f /dev/null
