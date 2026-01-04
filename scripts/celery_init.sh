@@ -3,6 +3,9 @@
 USER_HOME=$(eval echo ~"$(whoami)")
 CURRENT_USER="$(whoami)"
 
+# Copy secrets
+"$USER_HOME/copy_secrets.sh"
+
 echo "Running init.sh..." > celery_init.txt
 
 # Only install dependencies in development
@@ -15,8 +18,8 @@ fi
 echo "Starting worker..." >> celery_init.txt
 if [ "$DJANGO_ENV" == "production" ]; then
     echo "Starting production worker" >> celery_init.txt
-    celery -A forj.celery worker --loglevel=INFO -c 100 --pool=gevent
+    "$USER_HOME/app/.venv/bin/python" -m celery -A forj.celery worker --loglevel=INFO -c 100 --pool=gevent
 else
     echo "Starting development worker" >> celery_init.txt
-    celery -A forj.celery worker --loglevel=DEBUG --pool=solo
+    "$USER_HOME/app/.venv/bin/python" -m celery -A forj.celery worker --loglevel=DEBUG --pool=solo
 fi
