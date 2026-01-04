@@ -12,6 +12,7 @@ dependencies = [
     "django-celery-results (>=2.6.0,<3.0.0)",
     "redis[hiredis] (>=5.0.1,<6.0.0)",
     "celery[redis] (>=5.5.3,<6.0.0)",
+    "psycopg[binary] (>=3.3.2,<4.0.0)",
 ]
 
 [dependency-groups]
