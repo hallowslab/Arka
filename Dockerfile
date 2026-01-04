@@ -168,7 +168,7 @@ COPY --from=builder /app/.venv /home/forj/app/.venv
 ENV PATH="/home/forj/app/.venv/bin:$PATH"
 
 COPY scripts/celery_init.sh /home/forj/app/init.sh
-COPY scripts/copy_secrets.sh /home/forj/app/copy_secrets.sh
+COPY scripts/copy_secrets.sh /home/forj/copy_secrets.sh
 COPY src/ .
 
 # fix perms
