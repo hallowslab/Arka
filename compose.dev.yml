@@ -27,10 +27,18 @@ services:
       - ./src/forj:/home/forj/app/forj/
       - ./src/modular_apps:/home/forj/app/modular_apps/
     # command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
-    command: bash -c '/home/forj/app/init.sh & tail -f /dev/null'
+    command: bash -c '/home/forj/app/init.sh worker & tail -f /dev/null'
 
   forj-scheduler:
-    command: tail -f /dev/null
+    volumes:
+        - shared_logs_dev:$ARKA_LOGDIR
+        - static_root_dev:$STATIC_ROOT
+        - ./src/arka:/home/forj/app/arka/
+        - ./src/templates:/home/forj/app/templates
+        - ./src/static:/home/forj/app/static
+        - ./src/forj:/home/forj/app/forj/
+        - ./src/modular_apps:/home/forj/app/modular_apps/
+    command: bash -c '/home/forj/app/init.sh beat & tail -f /dev/null'
 
 volumes:
   pgdata_dev:

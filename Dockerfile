@@ -60,7 +60,8 @@ ENV PYTHONFAULTHANDLER=1 \
     POETRY_INSTALLER_MAX_WORKERS=10 \
     # APP
     DJANGO_ENV=${DJANGO_ENV} \
-    STATIC_ROOT=${STATIC_ROOT}
+    STATIC_ROOT=${STATIC_ROOT} \
+    ARKA_LOGDIR=${ARKA_LOGDIR}
 
 
 RUN if [ "$DJANGO_ENV" = "development" ]; then \
@@ -90,6 +91,7 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
         echo 'export PATH="/home/arka/.local/bin:$PATH"' >> /home/arka/.bashrc && \
         echo 'export PATH="$POETRY_HOME/bin:$PATH"' >> /home/arka/.bashrc; \
     fi
+ENV PATH="/home/arka/.local/bin:${PATH}"
 
 WORKDIR /home/arka/app
 
@@ -134,7 +136,8 @@ ENV PYTHONFAULTHANDLER=1 \
     POETRY_INSTALLER_MAX_WORKERS=10 \
     # APP
     DJANGO_ENV=${DJANGO_ENV} \
-    STATIC_ROOT=${STATIC_ROOT}
+    STATIC_ROOT=${STATIC_ROOT} \
+    ARKA_LOGDIR=${ARKA_LOGDIR}
 
 
 RUN if [ "$DJANGO_ENV" = "development" ]; then \
@@ -160,7 +163,9 @@ RUN if [ "$DJANGO_ENV" = "development" ]; then \
         pipx install poetry && \
         echo 'export PATH="/home/forj/.local/bin:$PATH"' >> /home/forj/.bashrc && \
         echo 'export PATH="$POETRY_HOME/bin:$PATH"' >> /home/forj/.bashrc; \
-    fi
+        fi
+ENV PATH="/home/forj/.local/bin:${PATH}"
+        
 
 WORKDIR /home/forj/app
 

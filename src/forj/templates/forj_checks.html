@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}FORJ - System Checks{% endblock %}
+
+{% block content %}
+<h1 class="title is-4">FORJ - System Checks</h1>
+
+<p class="mb-4">
+    This page aggregates operational checks for the FORJ worker system.
+</p>
+
+<div class="columns is-multiline">
+{% for name, check in checks.items %}
+    <div class="column is-one-third">
+        <div class="card mb-4">
+            <div class="card-content">
+
+                <p class="title is-6">
+                    {{ check.description|default:name }}
+                </p>
+
+                {# ---- ACTION CHECKS (manual, may have side effects) ---- #}
+                {% if check.type == "action" %}
+
+                    {% if check.side_effect %}
+                        <span class="tag is-warning is-light mb-2">
+                            Has side effects
+                        </span>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button class="button is-primary" type="submit">
+                            Run test task
+                        </button>
+                    </form>
+
+                    {% if check.task_id %}
+                        <div class="notification is-info mt-4">
+                            Task dispatched successfully.<br>
+                            <strong>Task ID:</strong> {{ check.task_id }}
+                        </div>
+                    {% endif %}
+
+                {# ---- STATUS CHECKS (read-only) ---- #}
+                {% elif check.type == "status" %}
+
+                    {% if check.status == "ok" %}
+                        <span class="tag is-success">OK</span>
+                    {% elif check.status == "warning" %}
+                        <span class="tag is-warning">WARNING</span>
+                    {% else %}
+                        <span class="tag is-danger">ERROR</span>
+                    {% endif %}
+
+                    {% if check.count is not none %}
+                        <p class="mt-2">
+                            {{ check.count }} worker{{ check.count|pluralize }} online
+                        </p>
+                    {% endif %}
+
+                    {% if check.hosts %}
+                        <p class="is-size-7 has-text-grey">
+                            Hosts: {{ check.hosts|join:", " }}
+                        </p>
+                    {% endif %}
+
+                    {% if checks.worker_presence.timestamp %}
+                        <p class="is-size-7 has-text-grey">
+                            Last updated: {{ checks.worker_presence.timestamp }}
+                        </p>
+                    {% endif %}
+
+                {# ---- FALLBACK ---- #}
+                {% else %}
+                    <span class="tag is-warning">Unknown check type</span>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}

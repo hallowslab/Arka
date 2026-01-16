@@ -4,5 +4,6 @@ from . import views
 app_name="forj"
 
 urlpatterns = [
-    path("", views.index, name="forj_home"),
+    path("", views.index, name="index"),
+    path("checks/", views.checks, name="checks")
 ]
