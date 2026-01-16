@@ -5,5 +5,4 @@ app_name="forj"
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("checks/", views.checks, name="checks")
 ]

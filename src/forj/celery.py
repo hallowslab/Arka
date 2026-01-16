@@ -16,13 +16,6 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # Load task modules from all registered Django apps.
 app.autodiscover_tasks()
 
-app.conf.beat_schedule = {
-    "forj-worker-hearthbeat": {
-        "task": "forj.tasks.worker_heartbeat",
-        "schedule": 10.0,  # every 30 seconds
-    },
-}
-
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f"Request: {self.request!r}")

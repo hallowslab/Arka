@@ -1,0 +1,26 @@
+FROM nginx:latest
+
+ARG GID=1002
+ARG GROUPNAME=arka
+
+# Install openssl
+RUN apt-get update && \
+    apt-get install -y openssl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create SSL directory
+RUN mkdir -p /etc/ssl/private /etc/ssl/certs
+
+# Generate self-signed SSL certificate and private key
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/nginx-selfsigned.key \
+    -out /etc/ssl/certs/nginx-selfsigned.crt \
+    -subj "/C=PT/ST=Lisbon/L=Lisbon/O=Arka/OU=Tech/CN=localhost"
+
+# Ensure permissions
+RUN chown -R root:root /etc/ssl/private /etc/ssl/certs && \
+    chmod 600 /etc/ssl/private/nginx-selfsigned.key && \
+    chmod 644 /etc/ssl/certs/nginx-selfsigned.crt
+
+# Optional: Add the group for shared volumes
+RUN addgroup --gid $GID $GROUPNAME || true

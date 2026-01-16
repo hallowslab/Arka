@@ -46,17 +46,34 @@ services:
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
         STATIC_ROOT: ${STATIC_ROOT}
         ARKA_LOGDIR: ${ARKA_LOGDIR}
-    ports:
-      - "8000:8000"
     depends_on:
       - rabbitmq
     volumes:
       - shared_logs:$ARKA_LOGDIR
+      - static_root:$STATIC_ROOT
       - type: bind
         source: ./secrets
         target: /run/secrets
         read_only: true
-    command: gunicorn arka.wsgi:application --bind 0.0.0.0:8000
+    command: bash -c '/home/arka/app/init.sh'
+  # ---------- Nginx ----------
+  arka.internal:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nginx
+      args:
+        GID: 1002
+        GROUPNAME: ${CONTAINER_GROUP:-arka}
+    ports:
+      - "5001:80"
+      - "5000:443"
+    environment:
+      STATIC_ROOT: ${STATIC_ROOT}
+    volumes:
+      - ./docker/templates:/etc/nginx/templates
+      - static_root:/var/www/static:ro
+    depends_on:
+      - arka
   # ---------- Forj-celery ----------
   forj: &forj_base
     build:
@@ -81,16 +98,37 @@ services:
     deploy:
       mode: replicated
       replicas: ${WORKER_REPLICAS:-1}
-    command: /home/forj/.venv/bin/celery -A forj.celery worker -l ${FORJ_LOG_LEVEL:-INFO}
+    command: bash -c '/home/forj/app/init.sh worker'
   # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base
     deploy:
       mode: global
-    command: >
-      /bin/sh -c "
-        /home/forj/.venv/bin/celery -A forj.celery beat -l ${FORJ_LOG_LEVEL:-INFO} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
-      "
+    volumes:
+      - shared_logs:$ARKA_LOGDIR
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    command: bash -c '/home/forj/app/init.sh beat'
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    profiles:
+      - monitor
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@arka.internal}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-PGAdmin}
+    ports:
+      - 9001:80
+  rinsight:
+    image: redislabs/redisinsight:latest
+    profiles:
+      - monitor
+    restart: always
+    ports:
+      - 5540:5540
+
 volumes:
   pgdata:
   static_root:

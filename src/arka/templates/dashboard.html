@@ -6,17 +6,22 @@
 <div class="columns is-multiline">
     <div class="column is-one-third">
         <!-- Database card -->
-         <div class="card mb-4 is-clickable">
+        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_database' %}'">
             <div class="card-content">
                 <div class="level mb-2">
                     <div class="level-left">
-                        <p class="title is-5">Database</p>
+                        <div>
+                            <p class="title is-5">Database</p>
+                            {% if timestamp %}
+                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="level-right">
                         {% if checks.database.status == "ok" %}
-                            <span class="tag is-success">OK</span>
+                        <span class="tag is-success">OK</span>
                         {% else %}
-                            <span class="tag is-danger">ERROR</span>
+                        <span class="tag is-danger">ERROR</span>
                         {% endif %}
                     </div>
                 </div>
@@ -30,17 +35,22 @@
     </div>
     <div class="column is-one-third">
         <!-- Redis card -->
-         <div class="card mb-4 is-clickable">
+        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_redis' %}'">
             <div class="card-content">
                 <div class="level mb-2">
                     <div class="level-left">
-                        <p class="title is-5">Redis</p>
+                        <div>
+                            <p class="title is-5">Redis</p>
+                            {% if timestamp %}
+                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="level-right">
                         {% if checks.redis.status == "ok" %}
-                            <span class="tag is-success">OK</span>
+                        <span class="tag is-success">OK</span>
                         {% else %}
-                            <span class="tag is-danger">ERROR</span>
+                        <span class="tag is-danger">ERROR</span>
                         {% endif %}
                     </div>
                 </div>
@@ -53,19 +63,24 @@
     </div>
     <div class="column is-one-third">
         <!-- RabbitMQ card -->
-         <a href="{% url 'forj:checks' %}" class="card mb-4 is-clickable">
+        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_rabbitmq' %}'">
             <div class="card-content">
                 <div class="level mb-2">
                     <div class="level-left">
-                        <p class="title is-5">RabbitMQ / FORJ</p>
+                        <div>
+                            <p class="title is-5">RabbitMQ / FORJ</p>
+                            {% if timestamp %}
+                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="level-right">
                         {% if checks.rabbitmq.status == "ok" %}
-                            <span class="tag is-success">OK</span>
+                        <span class="tag is-success">OK</span>
                         {% elif checks.rabbitmq.status == "warning" %}
-                            <span class="tag is-warning">WARNING</span>
+                        <span class="tag is-warning">WARNING</span>
                         {% else %}
-                            <span class="tag is-danger">ERROR</span>
+                        <span class="tag is-danger">ERROR</span>
                         {% endif %}
                     </div>
                 </div>
@@ -74,7 +89,7 @@
                     {{ checks.rabbitmq.message }}
                 </p>
             </div>
-        </a>
+        </div>
     </div>
 </div>
 {% endblock %}

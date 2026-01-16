@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Database Monitoring{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+    <ul>
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="is-active"><a href="#" aria-current="page">Database</a></li>
+    </ul>
+</nav>
+
+<div class="box">
+    <div class="level">
+        <div class="level-left">
+            <h1 class="title">Database Health</h1>
+        </div>
+        <div class="level-right">
+            {% if database.status == "ok" %}
+            <span class="tag is-success is-large">OK</span>
+            {% else %}
+            <span class="tag is-danger is-large">ERROR</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="columns is-multiline">
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Vendor / Status</p>
+                <p class="title is-4">{{ database.stats.vendor|capfirst|default:"DB" }}: {{ database.status|upper }}</p>
+            </div>
+        </div>
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Table Count</p>
+                <p class="title is-4">{{ database.stats.table_count|default:"N/A" }}</p>
+            </div>
+        </div>
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Database Size</p>
+                <p class="title is-4">
+                    {% if database.stats.size_bytes %}
+                    {{ database.stats.size_bytes|filesizeformat }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% if database.stats.active_connections %}
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Active Connections</p>
+                <p class="title is-4">{{ database.stats.active_connections }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="message is-info">
+        <div class="message-body">
+            <strong>Check Message:</strong> {{ database.message }}
+            <br>
+            <small class="has-text-grey">Last Updated: {{ timestamp|default:"Never" }}</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,20 +1,22 @@
-
-/* elements for dark mode */
+/* elements for light mode */
 body.has-background-light {
     --surface-bg: #ffffff;
     --surface-text: #363636;
+    --notif-light-bg: #f5f5f5;
 }
 
-/* elements for light mode */
+/* elements for dark mode */
 body.has-background-dark {
     --surface-bg: #1e1e1e;
     --surface-text: #e0e0e0;
+    --notif-light-bg: #2b2b2b;
+    /* Darker background for is-light notifications in dark mode */
 }
 
 .box,
 .card,
 input.input,
-.notification
+.notification,
 a.card {
     background-color: var(--surface-bg);
     color: var(--surface-text);
@@ -39,13 +41,16 @@ a.card:hover {
 body.has-background-light.has-text-dark .title {
     color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
 }
+
 body.has-background-dark.has-text-light .title {
     color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
 }
+
 /* Overrides .subtitle { color: var(--bulma-title-color); } */
 body.has-background-light.has-text-dark .subtitle {
     color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
 }
+
 body.has-background-dark.has-text-light .subtitle {
     color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
 }

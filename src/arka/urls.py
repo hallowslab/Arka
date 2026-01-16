@@ -26,7 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Forj/celery
     path("FORJ/", include("forj.urls")),
-    # Atuhentication
+    # Authetication
     path(
         "login/",
         auth_views.LoginView.as_view(
@@ -41,6 +41,10 @@ urlpatterns = [
     # Base site
     path("", views.dashboard, name="dashboard"),
     path("profile/", views.profile, name="user_profile"),
+    # Monitoring Details
+    path("monitoring/database/", views.monitor_database, name="monitor_database"),
+    path("monitoring/redis/", views.monitor_redis, name="monitor_redis"),
+    path("monitoring/rabbitmq/", views.monitor_rabbitmq, name="monitor_rabbitmq"),
 ]
 
 # Modular apps

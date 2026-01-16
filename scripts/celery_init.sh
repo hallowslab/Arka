@@ -28,6 +28,7 @@ case "$ROLE" in
       exec "$VENV_PY" -m celery \
         -A forj.celery worker \
         --loglevel=INFO \
+        --hostname=worker@%h \
         -c 100 \
         --pool=gevent
     else
@@ -35,6 +36,7 @@ case "$ROLE" in
       exec "$VENV_PY" -m celery \
         -A forj.celery worker \
         --loglevel=DEBUG \
+        --hostname=worker@%h \
         --pool=solo
     fi
     ;;

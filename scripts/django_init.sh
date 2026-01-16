@@ -29,6 +29,10 @@ fi
 echo "Running initadmin command" >> django_init.txt
 "$USER_HOME/app/.venv/bin/python" manage.py initadmin >> django_init.txt
 
+# Load periodic tasks fixture
+echo "Loading periodic tasks..." >> django_init.txt
+"$USER_HOME/app/.venv/bin/python" manage.py loaddata periodic_tasks >> django_init.txt
+
 # Run the create_management_group command
 echo "Running create_management_groups command" >> django_init.txt
 "$USER_HOME/app/.venv/bin/python" manage.py create_management_groups >> django_init.txt
@@ -40,7 +44,7 @@ echo "Running create_management_groups command" >> django_init.txt
 echo "Starting app..." >> django_init.txt
 if [ "$DJANGO_ENV" == "production" ]; then
     echo "Starting production server" >> django_init.txt
-    "$USER_HOME/app/.venv/bin/python" -m gunicorn arka.asgi:application -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker
+    "$USER_HOME/app/.venv/bin/python" -m gunicorn arka.asgi:application -b 0.0.0.0:8000 -k uvicorn_worker.UvicornWorker
 else
     echo "Starting development server" >> django_init.txt
     poetry run python manage.py runserver 0.0.0.0:8000
