@@ -33,13 +33,16 @@ def build_broker_url(config: dict[str, str]) -> str:
     """
     Builds a string for the broker url from a dictionary
     """
-    scheme = config.get("scheme", "amqp")
-    username = quote(config["username"])
-    password = quote(config["password"])
-    host = config["host"]
-    port = config.get("port", 5672)
-    vhost = quote(config.get("vhost", "/"), safe="")
-    return f"{scheme}://{username}:{password}@{host}:{port}/{vhost}"
+    try:
+        scheme = config.get("scheme", "amqp")
+        username = quote(config["username"])
+        password = quote(config["password"])
+        host = config["host"]
+        port = config.get("port", 5672)
+        vhost = quote(config.get("vhost", "/"), safe="")
+        return f"{scheme}://{username}:{password}@{host}:{port}/{vhost}"
+    except Exception as e:
+        raise e
 
 def check_logdir(logdir: Optional[str]):
     """

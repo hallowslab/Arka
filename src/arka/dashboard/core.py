@@ -1,10 +1,24 @@
+import os
+from typing import Any, TypedDict, Dict
 from django.db import connections
 from django.conf import settings
 from django.core.cache import cache
 from kombu import Connection
 from kombu.exceptions import OperationalError as KombuOperationalError
-import os
 import redis
+
+class DatabaseStats(TypedDict, total=False):
+    vendor: str
+    table_count: int
+    size_bytes: int
+    active_connections: int
+    foreign_keys: bool
+    sqlite_version: str
+    journal_mode: str
+    synchronous: int
+    pages: Dict[str, Any]
+    activity: Dict[str, Any]
+    cache_hit_ratio: Any
 
 
 def get_worker_presence():
@@ -74,23 +88,59 @@ def get_worker_presence():
 def check_database():
     try:
         db_conn = connections["default"]
-        # Basic connectivity
-        db_conn.cursor()
 
-        stats = {"vendor": db_conn.vendor}
+        stats: DatabaseStats = {"vendor": db_conn.vendor}
         if db_conn.vendor == "sqlite":
-            # Table count
             with db_conn.cursor() as cursor:
-                cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
+                # Table count
+                cursor.execute(
+                    "SELECT count(*) FROM sqlite_master WHERE type='table'"
+                )
                 stats["table_count"] = cursor.fetchone()[0]
 
-            # File size
+                # SQLite version
+                cursor.execute("SELECT sqlite_version()")
+                stats["sqlite_version"] = cursor.fetchone()[0]
+
+                # Journal mode
+                cursor.execute("PRAGMA journal_mode")
+                stats["journal_mode"] = cursor.fetchone()[0]
+
+                # Synchronous level
+                cursor.execute("PRAGMA synchronous")
+                stats["synchronous"] = cursor.fetchone()[0]
+
+                # Foreign keys
+                cursor.execute("PRAGMA foreign_keys")
+                stats["foreign_keys"] = bool(cursor.fetchone()[0])
+
+                # Page metrics
+                cursor.execute("PRAGMA page_size")
+                page_size = cursor.fetchone()[0]
+
+                cursor.execute("PRAGMA page_count")
+                page_count = cursor.fetchone()[0]
+
+                cursor.execute("PRAGMA freelist_count")
+                freelist_count = cursor.fetchone()[0]
+
+                stats["pages"] = {
+                    "page_size": page_size,
+                    "page_count": page_count,
+                    "free_pages": freelist_count,
+                    "used_bytes": (page_count - freelist_count) * page_size,
+                    "free_bytes": freelist_count * page_size,
+                }
+
+            # File size (filesystem-level)
             db_path = settings.DATABASES["default"]["NAME"]
             if os.path.exists(db_path):
                 stats["size_bytes"] = os.path.getsize(db_path)
 
         elif db_conn.vendor == "postgresql":
             with db_conn.cursor() as cursor:
+                db_name = settings.DATABASES["default"]["NAME"]
+
                 # Table count
                 cursor.execute(
                     "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'"
@@ -98,8 +148,7 @@ def check_database():
                 stats["table_count"] = cursor.fetchone()[0]
 
                 # Database size
-                db_name = settings.DATABASES["default"]["NAME"]
-                cursor.execute(f"SELECT pg_database_size('{db_name}')")
+                cursor.execute("SELECT pg_database_size(%s)", [db_name])
                 stats["size_bytes"] = cursor.fetchone()[0]
 
                 # Active connections
@@ -108,6 +157,56 @@ def check_database():
                     [db_name],
                 )
                 stats["active_connections"] = cursor.fetchone()[0]
+
+                # Database-level stats
+                cursor.execute(
+                    """
+                    SELECT
+                        xact_commit,
+                        xact_rollback,
+                        blks_read,
+                        blks_hit,
+                        tup_inserted,
+                        tup_updated,
+                        tup_deleted,
+                        deadlocks
+                    FROM pg_stat_database
+                    WHERE datname = %s
+                    """,
+                    [db_name],
+                )
+                row = cursor.fetchone()
+                stats["activity"] = {
+                    "commits": row[0],
+                    "rollbacks": row[1],
+                    "blocks_read": row[2],
+                    "blocks_hit": row[3],
+                    "rows_inserted": row[4],
+                    "rows_updated": row[5],
+                    "rows_deleted": row[6],
+                    "deadlocks": row[7],
+                }
+
+                # Cache hit ratio
+                cursor.execute(
+                    """
+                    SELECT
+                        round(
+                            sum(blks_hit) * 100.0 /
+                            nullif(sum(blks_hit + blks_read), 0),
+                            2
+                        )
+                    FROM pg_stat_database
+                    WHERE datname = %s
+                    """,
+                    [db_name],
+                )
+                stats["cache_hit_ratio"] = cursor.fetchone()[0]
+        else:
+            return {
+                "status": "error",
+                "message": str(f"DBVendor: {db_conn.vendor} is not supported"),
+            }
 
         return {
             "status": "ok",

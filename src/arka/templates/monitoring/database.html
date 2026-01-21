@@ -17,55 +17,205 @@
         </div>
         <div class="level-right">
             {% if database.status == "ok" %}
-            <span class="tag is-success is-large">OK</span>
+                <span class="tag is-success is-large">OK</span>
             {% else %}
-            <span class="tag is-danger is-large">ERROR</span>
+                <span class="tag is-danger is-large">ERROR</span>
             {% endif %}
         </div>
     </div>
 
     <hr>
 
+    <!-- Core Info -->
     <div class="columns is-multiline">
         <div class="column is-one-third">
             <div class="notification">
                 <p class="heading">Vendor / Status</p>
-                <p class="title is-4">{{ database.stats.vendor|capfirst|default:"DB" }}: {{ database.status|upper }}</p>
+                <p class="title is-4">
+                    {{ database.stats.vendor|capfirst|default:"DB" }} · {{ database.status|upper }}
+                </p>
             </div>
         </div>
+
         <div class="column is-one-third">
             <div class="notification">
                 <p class="heading">Table Count</p>
-                <p class="title is-4">{{ database.stats.table_count|default:"N/A" }}</p>
+                <p class="title is-4">
+                    {{ database.stats.table_count|default:"N/A" }}
+                </p>
             </div>
         </div>
+
         <div class="column is-one-third">
             <div class="notification">
                 <p class="heading">Database Size</p>
                 <p class="title is-4">
                     {% if database.stats.size_bytes %}
-                    {{ database.stats.size_bytes|filesizeformat }}
+                        {{ database.stats.size_bytes|filesizeformat }}
                     {% else %}
-                    N/A
+                        N/A
                     {% endif %}
                 </p>
             </div>
         </div>
-        {% if database.stats.active_connections %}
+
+        {% if database.stats.active_connections is not None %}
         <div class="column is-one-third">
             <div class="notification">
                 <p class="heading">Active Connections</p>
-                <p class="title is-4">{{ database.stats.active_connections }}</p>
+                <p class="title is-4">
+                    {{ database.stats.active_connections }}
+                </p>
             </div>
         </div>
         {% endif %}
     </div>
 
+    {# ===================== PostgreSQL ===================== #}
+    {% if database.stats.activity %}
+    <hr>
+
+    <h2 class="subtitle">Activity</h2>
+
+    <div class="columns is-multiline">
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Commits</p>
+                <p class="title is-5">{{ database.stats.activity.commits }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Rollbacks</p>
+                <p class="title is-5">{{ database.stats.activity.rollbacks }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Deadlocks</p>
+                <p class="title is-5">{{ database.stats.activity.deadlocks }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Cache Hit Ratio</p>
+                <p class="title is-5">
+                    {% if database.stats.cache_hit_ratio is not None %}
+                        {{ database.stats.cache_hit_ratio }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns is-multiline">
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Rows Inserted</p>
+                <p class="title is-5">{{ database.stats.activity.rows_inserted }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Rows Updated</p>
+                <p class="title is-5">{{ database.stats.activity.rows_updated }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Rows Deleted</p>
+                <p class="title is-5">{{ database.stats.activity.rows_deleted }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ===================== SQLite ===================== #}
+    {% if database.stats.sqlite_version %}
+    <hr>
+
+    <h2 class="subtitle">Configuration & Storage</h2>
+
+    <div class="columns is-multiline">
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">SQLite Version</p>
+                <p class="title is-5">{{ database.stats.sqlite_version }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Journal Mode</p>
+                <p class="title is-5">{{ database.stats.journal_mode|upper }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-third">
+            <div class="notification">
+                <p class="heading">Foreign Keys</p>
+                <p class="title is-5">
+                    {% if database.stats.foreign_keys %}
+                        Enabled
+                    {% else %}
+                        Disabled
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns is-multiline">
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Page Size</p>
+                <p class="title is-6">
+                    {{ database.stats.pages.page_size|filesizeformat }}
+                </p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Total Pages</p>
+                <p class="title is-6">{{ database.stats.pages.page_count }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Free Pages</p>
+                <p class="title is-6">{{ database.stats.pages.free_pages }}</p>
+            </div>
+        </div>
+
+        <div class="column is-one-quarter">
+            <div class="notification">
+                <p class="heading">Used Space</p>
+                <p class="title is-6">
+                    {{ database.stats.pages.used_bytes|filesizeformat }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <hr>
+
     <div class="message is-info">
         <div class="message-body">
             <strong>Check Message:</strong> {{ database.message }}
             <br>
-            <small class="has-text-grey">Last Updated: {{ timestamp|default:"Never" }}</small>
+            <small class="has-text-grey">
+                Last Updated: {{ timestamp|default:"Never" }}
+            </small>
         </div>
     </div>
 </div>

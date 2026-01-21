@@ -2,24 +2,44 @@
 body.has-background-light {
     --surface-bg: #ffffff;
     --surface-text: #363636;
-    --notif-light-bg: #f5f5f5;
+    --notif-text: #ffffff;
+    --notif-bg: #2b2b2b;
+    --hr-color: hsl(221, 14%, 9%);
+    --card-bg: #2b2b2b;
+    --card-text: #ffffff;
 }
 
 /* elements for dark mode */
 body.has-background-dark {
     --surface-bg: #1e1e1e;
     --surface-text: #e0e0e0;
-    --notif-light-bg: #2b2b2b;
-    /* Darker background for is-light notifications in dark mode */
+    --notif-text: #ffffff;
+    --notif-bg: #2b2b2b;
+    --hr-color: hsl(198deg, 100%, 14%);
+    --card-bg: #2b2b2b;
+    --card-text: #ffffff;
 }
 
+/* Surface components: box, card, input, anchor-card */
 .box,
-.card,
-input.input,
-.notification,
-a.card {
+input.input
+{
     background-color: var(--surface-bg);
     color: var(--surface-text);
+}
+
+/* Card element */
+.card {
+    background-color: var(--card-bg);
+    color: var(--card-text);
+}
+
+/* Nreak element */
+hr {
+    border: none;
+    height: 2px;
+    background-color: var(--hr-color);
+    margin: 1rem 0;
 }
 
 /* restore card behaviour for "anchor cards" */
@@ -36,21 +56,32 @@ a.card:hover {
     transition: all 0.15s ease-in-out;
 }
 
-
-/* Overrides .title { color: var(--bulma-title-color); } */
-body.has-background-light.has-text-dark .title {
-    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
+/* Global titles outside surfaces */
+body.has-background-light.has-text-dark :is(.title, .subtitle) {
+    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l));
 }
 
-body.has-background-dark.has-text-light .title {
-    color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
+/* Exclude titles/subtitles inside cards and notifications */
+body.has-background-light.has-text-dark .card .title,
+body.has-background-light.has-text-dark .card .subtitle,
+body.has-background-light.has-text-dark .notification .title,
+body.has-background-light.has-text-dark .notification .subtitle {
+    color: inherit !important; /* use inherited color for surfaces */
 }
 
-/* Overrides .subtitle { color: var(--bulma-title-color); } */
-body.has-background-light.has-text-dark .subtitle {
-    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l)) !important;
+/* ===== Notification-specific theming ===== */
+body.has-background-light .notification,
+body.has-background-dark .notification {
+    background-color: var(--notif-bg);
+    color: var(--notif-text);
 }
 
-body.has-background-dark.has-text-light .subtitle {
-    color: hsl(var(--bulma-light-h), var(--bulma-light-s), var(--bulma-light-l)) !important;
+/* Ensure titles/subtitles inside notifications inherit text color */
+.notification .title,
+.notification .subtitle,
+.box .title,
+.box .subtitle,
+.card .title,
+.card .subtitle {
+    color: inherit !important;
 }

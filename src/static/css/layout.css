@@ -58,6 +58,11 @@
     justify-content: center;
 }
 
+/* Disable version when collapsed */
+.sidebar.sidebar-collapsed #sidebar-version {
+    display: none;
+}
+
 /* Content wrapper */
 .content-wrapper {
     margin-left: 240px;

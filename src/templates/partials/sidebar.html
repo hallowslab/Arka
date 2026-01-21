@@ -6,6 +6,12 @@
     <nav class="menu px-3">
     <ul class="menu-list">
         <li>
+            <a href="/admin" class="py-2">
+                <span class="icon">📊</span>
+                <span class="menu-text">Administration</span>
+            </a>
+        </li>
+        <li>
             <a href="/" class="py-2">
                 <span class="icon">📊</span>
                 <span class="menu-text">Dashboard</span>
@@ -32,7 +38,7 @@
     </ul>
 </nav>
 
-    <div class="mt-auto p-4 has-text-centered is-size-7 has-text-grey-light">
+    <div id="sidebar-version" class="mt-auto p-4 has-text-centered is-size-7 has-text-grey-light">
         arka@v{{ PROJECT_VERSION }}
 
         {% if APP_NAME %}

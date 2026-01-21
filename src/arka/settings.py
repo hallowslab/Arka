@@ -188,7 +188,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Celery configs
 # https://docs.celeryq.dev/en/stable/django/index.html
 
-CELERY_BROKER_URL: Optional[str] = None
+CELERY_BROKER_URL = None
 CELERY_TIMEZONE = "Europe/Lisbon"
 CELERY_RESULT_BACKEND: str = "django-db"
 CELERY_RESULT_SERIALIZER = "json"
@@ -198,9 +198,7 @@ CELERY_TASK_SERIALIZER = "json"
 # CELERY_TASK_ALWAYS_EAGER: bool = True # Set True for local testing without a worker
 
 # Application log directory
-ARKA_LOGDIR: Optional[str] = os.environ.get("ARKA_LOGDIR", None)
-if ARKA_LOGDIR is None:
-    ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
+ARKA_LOGDIR: Optional[str] = None
 
 # Custom config
 CUSTOM_CONFIG = load_config_file(DJANGO_ENV, BASE_DIR)
@@ -215,20 +213,19 @@ CELERY_BROKER_URL = CUSTOM_CONFIG.get("CELERY_BROKER_URL", CELERY_BROKER_URL)
 CELERY_RESULT_BACKEND = CUSTOM_CONFIG.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
 
 # 2. Env Overrides (Priority)
-if os.environ.get("ARKA_LOGDIR"):
-    ARKA_LOGDIR = os.environ["ARKA_LOGDIR"]
+ARKA_LOGDIR = os.environ.get("ARKA_LOGDIR")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
 
-
 # 3. Finalize
-CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_URL)
-if ARKA_LOGDIR:
-    LOGGING.update(CUSTOM_CONFIG.get("LOGGING", load_logging_defaults(ARKA_LOGDIR)))
-if DJANGO_ENV == "production":
-    try:
-        check_logdir(ARKA_LOGDIR)
-        if STATIC_ROOT is None:
-            raise ValueError(f"Static root is not defined: {STATIC_ROOT}")
-    except Exception as e:
-        raise e
+if ARKA_LOGDIR is None:
+    ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
+LOGGING.update(CUSTOM_CONFIG.get("LOGGING", load_logging_defaults(ARKA_LOGDIR)))
+try:
+    CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_URL)
+    if DJANGO_ENV == "production":
+            check_logdir(ARKA_LOGDIR)
+            if STATIC_ROOT is None:
+                raise ValueError(f"Static root is not defined: {STATIC_ROOT}")
+except Exception as e:
+    raise e
 

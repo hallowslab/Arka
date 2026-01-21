@@ -30,8 +30,10 @@ WORKDIR /app
 
 COPY src/pyproject.toml src/poetry.lock* ./
 
+COPY src/modular_apps ./modular_apps
+
 #RUN poetry install --with dev,local_apps --no-root
-RUN poetry sync --without local_apps $(if [ "$DJANGO_ENV" = 'development' ]; then echo '--with dev'; fi) --no-root
+RUN poetry sync --with local_apps $(if [ "$DJANGO_ENV" = 'development' ]; then echo '--with dev'; fi) --no-root
 
 #COPY . .
 
