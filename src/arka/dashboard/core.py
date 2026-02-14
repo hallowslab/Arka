@@ -7,6 +7,7 @@ from kombu import Connection
 from kombu.exceptions import OperationalError as KombuOperationalError
 import redis
 
+
 class DatabaseStats(TypedDict, total=False):
     vendor: str
     table_count: int
@@ -93,9 +94,7 @@ def check_database():
         if db_conn.vendor == "sqlite":
             with db_conn.cursor() as cursor:
                 # Table count
-                cursor.execute(
-                    "SELECT count(*) FROM sqlite_master WHERE type='table'"
-                )
+                cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
                 stats["table_count"] = cursor.fetchone()[0]
 
                 # SQLite version
@@ -139,7 +138,10 @@ def check_database():
 
         elif db_conn.vendor == "postgresql":
             with db_conn.cursor() as cursor:
-                db_name = settings.DATABASES["default"]["NAME"]
+                # Get the database name from the connection itself, not settings.
+                # When using a PostgreSQL service file, NAME may be empty in settings.
+                cursor.execute("SELECT current_database()")
+                db_name = cursor.fetchone()[0]
 
                 # Table count
                 cursor.execute(

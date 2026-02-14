@@ -4,62 +4,58 @@
     </div>
 
     <nav class="menu px-3">
-    <ul class="menu-list">
-        <li>
-            <a href="/admin" class="py-2">
-                <span class="icon">📊</span>
-                <span class="menu-text">Administration</span>
-            </a>
-        </li>
-        <li>
-            <a href="/" class="py-2">
-                <span class="icon">📊</span>
-                <span class="menu-text">Dashboard</span>
-            </a>
-        </li>
-        <li>
-            <a href="/FORJ" class="py-2">
-                <span class="icon">📊</span>
-                <span class="menu-text">FÖᚱJ</span>
-            </a>
-        </li>
-        <li>
-            <a href="/PYMAP" class="py-2">
-                <span class="icon">📈</span>
-                <span class="menu-text">Pymap</span>
-            </a>
-        </li>
-        <li>
-            <a href="/AERA" class="py-2">
-                <span class="icon">⚙</span>
-                <span class="menu-text">ÆRA</span>
-            </a>
-        </li>
-    </ul>
-</nav>
+        <ul class="menu-list">
+            <li>
+                <a href="/admin" class="py-2">
+                    <span class="icon">📊</span>
+                    <span class="menu-text">Administration</span>
+                </a>
+            </li>
+            <li>
+                <a href="/" class="py-2">
+                    <span class="icon">📊</span>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/FORJ" class="py-2">
+                    <span class="icon">📊</span>
+                    <span class="menu-text">FÖᚱJ</span>
+                </a>
+            </li>
+            {% for app in modular_apps %}
+            <li>
+                <a href="{{ app.root_url }}" class="py-2">
+                    <span class="icon">{{ app.icon }}</span>
+                    <span class="menu-text">{{ app.name }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
 
     <div id="sidebar-version" class="mt-auto p-4 has-text-centered is-size-7 has-text-grey-light">
         arka@v{{ PROJECT_VERSION }}
 
         {% if APP_NAME %}
-            <div>
-                {{ APP_NAME }}@v{{ APP_VERSION }}
-            </div>
+        <div>
+            {{ APP_NAME }}@v{{ APP_VERSION }}
+        </div>
         {% endif %}
     </div>
 </aside>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const sidebar = document.getElementById("sidebar");
-    const content = document.getElementById("content");
-    const btn = document.getElementById("toggleBtn");
+    document.addEventListener("DOMContentLoaded", () => {
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content");
+        const btn = document.getElementById("toggleBtn");
 
-    if (sidebar && content && btn) {
-        btn.addEventListener("click", () => {
-            sidebar.classList.toggle("sidebar-collapsed");
-            content.classList.toggle("content-collapsed");
-        });
-    }
-});
+        if (sidebar && content && btn) {
+            btn.addEventListener("click", () => {
+                sidebar.classList.toggle("sidebar-collapsed");
+                content.classList.toggle("content-collapsed");
+            });
+        }
+    });
 </script>

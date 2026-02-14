@@ -13,7 +13,7 @@ services:
       - ./src/templates:/home/arka/app/templates
       - ./src/static:/home/arka/app/static
       - ./src/forj:/home/arka/app/forj/
-      - ./src/modular_apps:/home/arka/app/modular_apps/
+      # - ./src/modular_apps:/home/arka/app/modular_apps/
       - ./src/db.sqlite3:/home/arka/app/db.sqlite3
     ports:
       - "8000:8000"
@@ -28,7 +28,7 @@ services:
       - ./src/templates:/home/forj/app/templates
       - ./src/static:/home/forj/app/static
       - ./src/forj:/home/forj/app/forj/
-      - ./src/modular_apps:/home/forj/app/modular_apps/
+      # - ./src/modular_apps:/home/forj/app/modular_apps/
       - ./src/db.sqlite3:/home/forj/app/db.sqlite3
     # command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
     command: bash -c '/home/forj/app/init.sh worker & tail -f /dev/null'
@@ -41,7 +41,7 @@ services:
       - ./src/templates:/home/forj/app/templates
       - ./src/static:/home/forj/app/static
       - ./src/forj:/home/forj/app/forj/
-      - ./src/modular_apps:/home/forj/app/modular_apps/
+      # - ./src/modular_apps:/home/forj/app/modular_apps/
       - ./src/db.sqlite3:/home/forj/app/db.sqlite3
     command: bash -c '/home/forj/app/init.sh beat & tail -f /dev/null'
 

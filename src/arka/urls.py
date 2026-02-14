@@ -36,8 +36,16 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("password_change/", auth_views.PasswordChangeView.as_view(), name="password_change"),
-    path("password_change/done/", auth_views.PasswordChangeDoneView.as_view(), name="password_change_done"),
+    path(
+        "password_change/",
+        auth_views.PasswordChangeView.as_view(),
+        name="password_change",
+    ),
+    path(
+        "password_change/done/",
+        auth_views.PasswordChangeDoneView.as_view(),
+        name="password_change_done",
+    ),
     # Base site
     path("", views.dashboard, name="dashboard"),
     path("profile/", views.profile, name="user_profile"),
@@ -53,6 +61,4 @@ if app_exists("pymap"):
         path("PYMAP/", include(("pymap.urls", "pymap"), namespace="pymap"))
     )
 if app_exists("aera"):
-    urlpatterns.append(
-        path("AERA/", include(("aera.urls", "aera"), namespace="aera"))
-    )
+    urlpatterns.append(path("AERA/", include(("aera.urls", "aera"), namespace="aera")))

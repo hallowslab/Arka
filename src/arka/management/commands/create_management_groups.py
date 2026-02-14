@@ -13,9 +13,12 @@ class Command(BaseCommand):
     help = "Adds a group for managing the users trough the admin dashboard"
 
     def manage_group(
-        self, group_name: str, model: type[Model]|None=None, group_permissions: list[str]|None = None
+        self,
+        group_name: str,
+        model: type[Model] | None = None,
+        group_permissions: list[str] | None = None,
     ) -> None:
-        
+
         def has_permission(group: Group, perm: Permission) -> bool:
             return group.permissions.filter(codename=perm.codename).exists()
 
@@ -44,9 +47,9 @@ class Command(BaseCommand):
         # Only add model permissions if model is provided
         if model is not None and group_permissions is not None:
             model_content_type = ContentType.objects.get_for_model(model)
-            permissions = Permission.objects.filter(content_type=model_content_type).filter(
-                codename__in=group_permissions
-            )
+            permissions = Permission.objects.filter(
+                content_type=model_content_type
+            ).filter(codename__in=group_permissions)
             add_permissions(permissions)
 
         # Save the group

@@ -1,3 +1,6 @@
+# Modular apps
+**/modular_apps/
+
 # secrets for docker
 config.json
 config.dev.json

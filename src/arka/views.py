@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.cache import caches
 
+
 @login_required
 def dashboard(request):
     cache = caches["default"]
@@ -12,11 +13,11 @@ def dashboard(request):
             "database": {"status": "unknown", "message": "Pending check..."},
             "redis": {"status": "unknown", "message": "Pending check..."},
             "rabbitmq": {"status": "unknown", "message": "Pending check..."},
-        }
+        },
     }
-    
+
     results = cache.get("arka_system_status", default_results)
-    
+
     context = {
         "checks": results.get("checks", default_results["checks"]),
         "timestamp": results.get("timestamp"),

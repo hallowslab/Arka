@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 
+
 # Logging
 # https://docs.djangoproject.com/en/5.2/topics/logging/
 def load_logging_defaults(logdir: str):

@@ -43,9 +43,13 @@ services:
         GROUPNAME: ${CONTAINER_GROUP:-arka}
         GID: 1002
         DJANGO_ENV: ${DJANGO_ENV}
+        PYMAP_ENABLED: ${PYMAP_ENABLED}
+        AERA_ENABLED: ${AERA_ENABLED}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
         STATIC_ROOT: ${STATIC_ROOT}
         ARKA_LOGDIR: ${ARKA_LOGDIR}
+    ports:
+      - "8000:8000"
     depends_on:
       - rabbitmq
     volumes:
@@ -84,6 +88,8 @@ services:
         GROUPNAME: ${CONTAINER_GROUP:-arka}
         GID: 1002
         DJANGO_ENV: ${DJANGO_ENV}
+        PYMAP_ENABLED: ${PYMAP_ENABLED}
+        AERA_ENABLED: ${AERA_ENABLED}
         DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
         STATIC_ROOT: ${STATIC_ROOT}
         ARKA_LOGDIR: ${ARKA_LOGDIR}
@@ -104,6 +110,8 @@ services:
     <<: *forj_base
     deploy:
       mode: global
+    depends_on:
+      - forj
     volumes:
       - shared_logs:$ARKA_LOGDIR
       - type: bind

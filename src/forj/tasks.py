@@ -1,7 +1,6 @@
-from celery import shared_task, current_app
+from celery import shared_task
 from django.core.cache import cache
 from datetime import datetime
-import time
 
 
 @shared_task(bind=True)

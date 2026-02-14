@@ -14,7 +14,13 @@ import os
 from pathlib import Path
 from typing import Optional, List
 
-from .utils import build_broker_url, check_logdir, load_secret_key, load_config_file, app_exists
+from .utils import (
+    build_broker_url,
+    check_logdir,
+    load_secret_key,
+    load_config_file,
+    app_exists,
+)
 from .logging import load_logging_defaults
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -93,6 +99,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "arka.context_processors.project_version",
                 "arka.context_processors.active_app_version",
+                "arka.context_processors.modular_apps",
             ],
         },
     },
@@ -139,7 +146,6 @@ LOGGING = {
         "level": "INFO",
     },
 }
-
 
 
 # Password validation
@@ -210,7 +216,9 @@ CACHES.update(CUSTOM_CONFIG.get("CACHES", CACHES))
 ALLOWED_HOSTS = CUSTOM_CONFIG.get("ALLOWED_HOSTS", ALLOWED_HOSTS)
 CSRF_TRUSTED_ORIGINS = CUSTOM_CONFIG.get("CSRF_TRUSTED_ORIGINS", CSRF_TRUSTED_ORIGINS)
 CELERY_BROKER_URL = CUSTOM_CONFIG.get("CELERY_BROKER_URL", CELERY_BROKER_URL)
-CELERY_RESULT_BACKEND = CUSTOM_CONFIG.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
+CELERY_RESULT_BACKEND = CUSTOM_CONFIG.get(
+    "CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND
+)
 
 # 2. Env Overrides (Priority)
 ARKA_LOGDIR = os.environ.get("ARKA_LOGDIR")
@@ -223,9 +231,15 @@ LOGGING.update(CUSTOM_CONFIG.get("LOGGING", load_logging_defaults(ARKA_LOGDIR)))
 try:
     CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_URL)
     if DJANGO_ENV == "production":
-            check_logdir(ARKA_LOGDIR)
-            if STATIC_ROOT is None:
-                raise ValueError(f"Static root is not defined: {STATIC_ROOT}")
+        check_logdir(ARKA_LOGDIR)
+        if STATIC_ROOT is None:
+            raise ValueError(f"Static root is not defined: {STATIC_ROOT}")
 except Exception as e:
-    raise e
-
+    if DJANGO_ENV == "development":
+        print(
+            "FAILED TO LOAD CELERY_BROKER_URL THIS IS ONLY AN OVERRIDE TO RUN LOCALLY MAKEMIGRATIONS DJANGO MANAGEMENT COMMAND!!"
+        )
+        print(f"INSTALLED_APPS: {INSTALLED_APPS}")
+        pass
+    else:
+        raise e

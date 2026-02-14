@@ -12,10 +12,10 @@ CURRENT_USER="$(whoami)"
 echo "Running init.sh..." > django_init.txt
 
 # Only install dependencies in development
-if [ "$DJANGO_ENV" = "development" ]; then
-  echo "Development mode detected, synchronizing dependencies..." >> django_init.txt
-  poetry sync >> django_init.txt
-fi
+# if [ "$DJANGO_ENV" = "development" ]; then
+#   echo "Development mode detected, synchronizing dependencies..." >> django_init.txt
+#   poetry sync >> django_init.txt
+# fi
 
 echo "Running DB migration check..."
 if ! "$USER_HOME/app/.venv/bin/python" manage.py migrate --no-input --check >> django_init.txt; then
@@ -45,6 +45,7 @@ echo "Starting app..." >> django_init.txt
 if [ "$DJANGO_ENV" == "production" ]; then
     echo "Starting production server" >> django_init.txt
     "$USER_HOME/app/.venv/bin/python" -m gunicorn arka.asgi:application -b 0.0.0.0:8000 -k uvicorn_worker.UvicornWorker
+    tail -f /dev/null
 else
     echo "Starting development server" >> django_init.txt
     poetry run python manage.py runserver 0.0.0.0:8000
