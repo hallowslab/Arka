@@ -6,6 +6,12 @@ services:
     volumes:
       - pgdata_dev:/var/lib/postgresql
   arka:
+    environment:
+      - ARKA_DEV_MODE=true
+      - ARKA_EDITABLE_MODULES=pymap,aera
+      - ARKA_ENABLED_MODULES=pymap,aera
+      - PYMAP_LOCAL_PATH=${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}
+      - AERA_LOCAL_PATH=${AERA_LOCAL_PATH:-./src/modular_apps/AERA}
     volumes:
       - shared_logs_dev:$ARKA_LOGDIR
       - static_root_dev:$STATIC_ROOT
@@ -13,14 +19,20 @@ services:
       - ./src/templates:/home/arka/app/templates
       - ./src/static:/home/arka/app/static
       - ./src/forj:/home/arka/app/forj/
-      # - ./src/modular_apps:/home/arka/app/modular_apps/
-      - ./src/db.sqlite3:/home/arka/app/db.sqlite3
+      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
+      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
     ports:
       - "8000:8000"
-    command: bash -c '/home/arka/app/init.sh & tail -f /dev/null'
+    command: /home/arka/app/init.sh
     # command: tail -f /dev/null
 
   forj:
+    environment:
+      - ARKA_DEV_MODE=true
+      - ARKA_EDITABLE_MODULES=pymap,aera
+      - ARKA_ENABLED_MODULES=pymap,aera
+      - PYMAP_LOCAL_PATH=${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}
+      - AERA_LOCAL_PATH=${AERA_LOCAL_PATH:-./src/modular_apps/AERA}
     volumes:
       - shared_logs_dev:$ARKA_LOGDIR
       - static_root_dev:$STATIC_ROOT
@@ -28,12 +40,16 @@ services:
       - ./src/templates:/home/forj/app/templates
       - ./src/static:/home/forj/app/static
       - ./src/forj:/home/forj/app/forj/
-      # - ./src/modular_apps:/home/forj/app/modular_apps/
       - ./src/db.sqlite3:/home/forj/app/db.sqlite3
-    # command: /home/forj/app/.venv/bin/celery -A forj.celery worker -l debug
-    command: bash -c '/home/forj/app/init.sh worker & tail -f /dev/null'
+      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
+      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
+    command: /home/forj/app/init.sh worker
 
   forj-scheduler:
+    environment:
+      - ARKA_DEV_MODE=true
+      - ARKA_ENABLED_MODULES=pymap,aera
+      - ARKA_EDITABLE_MODULES=pymap,aera
     volumes:
       - shared_logs_dev:$ARKA_LOGDIR
       - static_root_dev:$STATIC_ROOT
@@ -41,9 +57,9 @@ services:
       - ./src/templates:/home/forj/app/templates
       - ./src/static:/home/forj/app/static
       - ./src/forj:/home/forj/app/forj/
-      # - ./src/modular_apps:/home/forj/app/modular_apps/
-      - ./src/db.sqlite3:/home/forj/app/db.sqlite3
-    command: bash -c '/home/forj/app/init.sh beat & tail -f /dev/null'
+      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
+      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
+    command: /home/forj/app/init.sh beat
 
 volumes:
   pgdata_dev:

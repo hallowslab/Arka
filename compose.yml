@@ -4,26 +4,37 @@ services:
     image: "docker.io/library/redis:latest"
     ports:
       - "6379:6379"
-    restart: always
+    restart: unless-stopped
   # ---------- Broker ----------
   rabbitmq:
-    image: rabbitmq:4-management
+    build:
+      context: .
+      dockerfile: docker/rabbitmq/Dockerfile
+    image: rabbitmq:arka-prod
+    container_name: rabbitmq-arka
+    hostname: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
-    container_name: rabbitmq-arka
-    hostname: rabbitmq
+    restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-forj}
+      RABBITMQ_DISK_FREE_LIMIT: 2GB
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   # ---------- DB ----------
   postgres:
     image: "docker.io/library/postgres:latest"
     ports:
       - "5432:5432"
+    restart: unless-stopped
     hostname: postgres-arka
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-arka}
@@ -33,6 +44,24 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     volumes:
       - pgdata:/var/lib/postgresql
+  # ---------- DB Pooling -----------
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: pgbouncer-arka
+    environment:
+      - DATABASES_HOST=${POSTGRES_HOST:-postgres}
+      - DATABASES_PORT=${POSTGRES_PORT:-5432}
+      - DATABASES_USER=${POSTGRES_USER}
+      - DATABASES_PASSWORD=${POSTGRES_PASSWORD}
+      - DATABASES_DBNAME=${POSTGRES_DB}
+      - PGBOUNCER_POOL_MODE=transaction # CRITICAL for Django
+      - PGBOUNCER_MAX_CLIENT_CONN=100
+      - PGBOUNCER_DEFAULT_POOL_SIZE=25
+    ports:
+      - "6432:6432"
+    restart: unless-stopped
+    depends_on:
+      - postgres
   # ---------- Arka-django ----------
   arka:
     build:
@@ -80,6 +109,8 @@ services:
       - arka
   # ---------- Forj-celery ----------
   forj: &forj_base
+    init: true
+    stop_grace_period: 5m
     build:
       context: .
       dockerfile: Dockerfile

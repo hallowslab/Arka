@@ -23,14 +23,15 @@ for env_var, (group_name, branch) in group_map.items():
         f"Variable {env_var} is True? {os.environ.get(env_var, "false").lower() == "true"}"
     )
     if os.environ.get(env_var, "false").lower() == "true":
-        for _, spec in group.items():
-            for name, props in spec.items():
-                if isinstance(props, dict) and "git" in props:
-                    # Update branch in properties of the dependency spec
-                    print(
-                        f"Updating branch for {name} from {props['branch']} to {branch}"
-                    )
-                    props["branch"] = branch
+        dependencies = group.get("dependencies", {})
+        for name, props in dependencies.items():
+            if isinstance(props, dict) and "git" in props:
+                # Update branch in properties of the dependency spec
+                print(
+                    f"Updating branch for {name} from {props.get('branch', 'unknown')} to {branch}"
+                )
+                props["branch"] = branch
+
     else:
         # Optionally, we could remove the dependency entirely if env var is false
         # pyproject["tool"]["poetry"]["group"][group_name] = {}

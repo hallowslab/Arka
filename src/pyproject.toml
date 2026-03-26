@@ -30,11 +30,8 @@ dev = [
     "poetry-version-exporter @ https://github.com/hallowslab/poetry-version-exporter/releases/download/v0.1.4/poetry_version_exporter-0.1.4-py3-none-any.whl",
 ]
 
-[tool.poetry.scripts]
-export-version = "poetry_version_exporter.cli:main"
-
 [tool.taskipy.tasks]
-export-versions = "poetry run export-version -n arka -o arka/_version.py && poetry run export-version -n aera -o modular_apps/AERA/aera/_version.py && poetry run export-version -n pymap -o modular_apps/Pymap/pymap/_version.py"
+export-versions = "uv run poetry-version-exporter -n arka -o arka/_version.py && uv run poetry-version-exporter -n aera -o modular_apps/AERA/aera/_version.py && uv run poetry-version-exporter -n pymap -o modular_apps/Pymap/pymap/_version.py"
 lint = "task lint_black && task lint_mypy && task lint_ruff"
 lint_black = "black ."
 lint_ruff = "ruff check"
@@ -44,9 +41,4 @@ lint_mypy = "mypy ."
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.group.pymap.dependencies]
-pymap = { git = "https://github.com/hallowslab/Pymap.git", branch = "modularize", extras = ["imapsync-dev"] }
-[tool.poetry.group.aera.dependencies]
-aera = { git = "https://github.com/hallowslab/AERA.git", branch = "main" }
 

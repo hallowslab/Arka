@@ -19,7 +19,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from .utils import app_exists
+from .plugins.discovery import registry
 from . import views
+
 
 urlpatterns = [
     # Administration
@@ -55,10 +57,24 @@ urlpatterns = [
     path("monitoring/rabbitmq/", views.monitor_rabbitmq, name="monitor_rabbitmq"),
 ]
 
-# Modular apps
+# Modular apps (Backward compatibility)
 if app_exists("pymap"):
     urlpatterns.append(
         path("PYMAP/", include(("pymap.urls", "pymap"), namespace="pymap"))
     )
 if app_exists("aera"):
     urlpatterns.append(path("AERA/", include(("aera.urls", "aera"), namespace="aera")))
+
+# Dynamic Plugin URLs
+for plugin in registry.get_enabled_plugins():
+    url_info = plugin.get_urls()
+    if url_info:
+        url_module, namespace = url_info
+        # Avoid double-including apps that are already hardcoded
+        if namespace not in ["pymap", "aera"]:
+            urlpatterns.append(
+                path(
+                    f"{plugin.name.upper()}/",
+                    include((url_module, namespace), namespace=namespace),
+                )
+            )

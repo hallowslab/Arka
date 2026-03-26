@@ -1,3 +1,5 @@
+FROM hallowtechlab/imapsync:debian_trixie-2.229 AS imapsync_binary
+
 FROM python:3.13-slim AS builder
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
@@ -170,13 +172,19 @@ ENV PYTHONFAULTHANDLER=1 \
     STATIC_ROOT=${STATIC_ROOT} \
     ARKA_LOGDIR=${ARKA_LOGDIR}
 
+COPY docker/scripts/perl_deps.sh /tmp/perl_deps.sh
+RUN chmod +x /tmp/perl_deps.sh
 
-RUN if [ "$DJANGO_ENV" = "development" ]; then \
-    apt-get update && \
-    apt-get install --no-install-recommends -y pipx && \
+RUN apt update && \
+    bash /tmp/perl_deps.sh && \
+    if [ "$DJANGO_ENV" = "development" ]; then \
+    apt-get install --no-install-recommends -y pipx; \
+    fi && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    apt-get clean -y && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*;
+
+
+COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
 
 # create user+group
 RUN addgroup --gid $GID $GROUPNAME \

@@ -22,6 +22,8 @@ from .utils import (
     app_exists,
 )
 from .logging import load_logging_defaults
+from .plugins.discovery import registry
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,13 +69,24 @@ INSTALLED_APPS: List[str] = [
     "django_celery_results",
     "django_celery_beat",
     "arka",
+    "arka.plugins.apps.PluginsConfig",
     "forj",
 ]
-if app_exists("pymap"):
-    INSTALLED_APPS.append("pymap")
 
-if app_exists("aera"):
-    INSTALLED_APPS.append("aera")
+# Discover plugins and inject their Django apps
+registry.discover()
+for plugin in registry.get_plugins():
+    if plugin.django_app not in INSTALLED_APPS:
+        INSTALLED_APPS.append(plugin.django_app)
+
+# Note: Hardcoded app_exists check for backward compatibility or transition
+for hardcoded_app in ["pymap", "aera"]:
+    if app_exists(hardcoded_app):
+        # Check if already added by plugin system (by name or path)
+        already_added = any(hardcoded_app in app for app in INSTALLED_APPS)
+        if not already_added:
+            INSTALLED_APPS.append(hardcoded_app)
+
 
 MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",
@@ -200,11 +213,25 @@ CELERY_RESULT_BACKEND: str = "django-db"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_SOFT_TIME_LIMIT = 14400  # 4 hours
+CELERY_TASK_TIME_LIMIT = 14700  # 4 hours 5 minutes
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 5
 # CELERY_TASK_TRACK_STARTED: bool = True
 # CELERY_TASK_ALWAYS_EAGER: bool = True # Set True for local testing without a worker
 
 # Application log directory
 ARKA_LOGDIR: Optional[str] = None
+
+# Plugin system settings
+ARKA_DEV_MODE: bool = DJANGO_ENV == "development"
+ARKA_ENABLED_MODULES: List[str] = os.environ.get("ARKA_ENABLED_MODULES", "").split(",")
+ARKA_EDITABLE_MODULES: List[str] = os.environ.get("ARKA_EDITABLE_MODULES", "").split(
+    ","
+)
+
 
 # Custom config
 CUSTOM_CONFIG = load_config_file(DJANGO_ENV, BASE_DIR)
