@@ -1,5 +1,8 @@
 # Modular apps
-**/modular_apps/
+#**/modular_apps/
+
+# sqlite
+*.sqlite3
 
 # secrets for docker
 config.json
@@ -86,7 +89,8 @@ target/
 # Virtual environment
 .env
 .venv/
-venv/
+**/.venv/
+**/venv/
 
 # PyCharm
 .idea
