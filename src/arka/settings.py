@@ -19,10 +19,9 @@ from .utils import (
     check_logdir,
     load_secret_key,
     load_config_file,
-    app_exists,
 )
 from .logging import load_logging_defaults
-from .plugins.discovery import registry
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -69,23 +68,14 @@ INSTALLED_APPS: List[str] = [
     "django_celery_results",
     "django_celery_beat",
     "arka",
-    "arka.plugins.apps.PluginsConfig",
     "forj",
 ]
 
-# Discover plugins and inject their Django apps
-registry.discover()
-for plugin in registry.get_plugins():
-    if plugin.django_app not in INSTALLED_APPS:
-        INSTALLED_APPS.append(plugin.django_app)
-
-# Note: Hardcoded app_exists check for backward compatibility or transition
-for hardcoded_app in ["pymap", "aera"]:
-    if app_exists(hardcoded_app):
-        # Check if already added by plugin system (by name or path)
-        already_added = any(hardcoded_app in app for app in INSTALLED_APPS)
-        if not already_added:
-            INSTALLED_APPS.append(hardcoded_app)
+# Modular apps inclusion
+if os.environ.get("ENABLE_AERA", "false").lower() == "true":
+    INSTALLED_APPS.append("aera")
+if os.environ.get("ENABLE_PYMAP", "false").lower() == "true":
+    INSTALLED_APPS.append("pymap")
 
 
 MIDDLEWARE: List[str] = [
@@ -225,12 +215,7 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 5
 # Application log directory
 ARKA_LOGDIR: Optional[str] = None
 
-# Plugin system settings
-ARKA_DEV_MODE: bool = DJANGO_ENV == "development"
-ARKA_ENABLED_MODULES: List[str] = os.environ.get("ARKA_ENABLED_MODULES", "").split(",")
-ARKA_EDITABLE_MODULES: List[str] = os.environ.get("ARKA_EDITABLE_MODULES", "").split(
-    ","
-)
+
 
 
 # Custom config
@@ -254,7 +239,25 @@ CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BA
 # 3. Finalize
 if ARKA_LOGDIR is None:
     ARKA_LOGDIR = str(Path(BASE_DIR, "ARKA_LOGS").resolve())
-LOGGING.update(CUSTOM_CONFIG.get("LOGGING", load_logging_defaults(ARKA_LOGDIR)))
+
+# Load logging: either from config or defaults
+custom_logging = CUSTOM_CONFIG.get("LOGGING")
+if isinstance(custom_logging, dict):
+    LOGGING.update(custom_logging)
+
+# Ensure file handlers use the correct ARKA_LOGDIR
+handlers = LOGGING.get("handlers", {})
+if isinstance(handlers, dict):
+    for h in handlers.values():
+        if isinstance(h, dict) and h.get("filename"):
+            f = str(h["filename"])
+            if not os.path.isabs(f):
+                h["filename"] = os.path.join(str(ARKA_LOGDIR), f)
+            else:
+                # If it's absolute, keep it but ensure it's a string
+                h["filename"] = f
+else:
+    LOGGING.update(load_logging_defaults(str(ARKA_LOGDIR)))
 try:
     CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_URL)
     if DJANGO_ENV == "production":
@@ -262,11 +265,29 @@ try:
         if STATIC_ROOT is None:
             raise ValueError(f"Static root is not defined: {STATIC_ROOT}")
 except Exception as e:
-    if DJANGO_ENV == "development":
+    if DJANGO_ENV == "migrations":
         print(
             "FAILED TO LOAD CELERY_BROKER_URL THIS IS ONLY AN OVERRIDE TO RUN LOCALLY MAKEMIGRATIONS DJANGO MANAGEMENT COMMAND!!"
         )
         print(f"INSTALLED_APPS: {INSTALLED_APPS}")
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
         pass
     else:
         raise e
+    
+if DJANGO_ENV == "migrations":
+        print(
+            "DEFAULTING DATABSE TO SQLITE!! THIS IS ONLY AN OVERRIDE TO RUN LOCALLY MAKEMIGRATIONS DJANGO MANAGEMENT COMMAND!!"
+        )
+        print(f"INSTALLED_APPS: {INSTALLED_APPS}")
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }

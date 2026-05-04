@@ -1,221 +1,137 @@
+# Base image for imapsync binary
 FROM hallowtechlab/imapsync:debian_trixie-2.229 AS imapsync_binary
 
-FROM python:3.13-slim AS builder
+# Stage 1: Base image with system dependencies and users
+FROM python:3.13-slim AS base
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
-ARG DJANGO_ENV \
-    PYMAP_ENABLED \
-    AERA_ENABLED
+ARG GID=1002
+ARG GROUPNAME=arka
 
-ENV PYTHONFAULTHANDLER=1 \
+ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
     PYTHONDONTWRITEBYTECODE=1 \
-    # Poetry
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_HOME='/opt/pypoetry' \
-    POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON=true \
-    POETRY_INSTALLER_MAX_WORKERS=10 \
-    # App
-    DJANGO_ENV=${DJANGO_ENV} \
-    PYMAP_ENABLED=${PYMAP_ENABLED} \
-    AERA_ENABLED=${AERA_ENABLED}
-
-RUN apt-get update && apt-get install --no-install-recommends -y pipx \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
-RUN pipx install poetry
-
-ENV PATH="/root/.local/bin:$PATH"
-ENV PATH="$POETRY_HOME/bin:$PATH"
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS} \
+    STATIC_ROOT=${STATIC_ROOT:-/var/www/static} \
+    PATH="/uv/bin:${PATH}"
 
 WORKDIR /app
 
-# For logging dependency management
-RUN mkdir -p /tmp/dependency_logs
+# Install system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    curl \
+    ca-certificates \
+    git \
+    gosu \
+    postgresql-client \
+    libauthen-ntlm-perl \
+    libcgi-pm-perl libcrypt-openssl-rsa-perl libdata-uniqid-perl libencode-imaputf7-perl libfile-copy-recursive-perl libfile-tail-perl \
+    libio-socket-inet6-perl libio-socket-ssl-perl libio-tee-perl libhtml-parser-perl libjson-webtoken-perl libmail-imapclient-perl \
+    libparse-recdescent-perl libproc-processtable-perl libmodule-scandeps-perl libreadonly-perl libregexp-common-perl libsys-meminfo-perl \
+    libterm-readkey-perl libtest-mockobject-perl libtest-pod-perl libunicode-string-perl liburi-perl libwww-perl libtest-nowarnings-perl \
+    libtest-deep-perl libtest-warn-perl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-#COPY src/modular_apps ./modular_apps
-#RUN poetry install --with dev,local_apps --no-root
+# Create users
+RUN addgroup --gid $GID $GROUPNAME && \
+    adduser --disabled-password --gecos '' --uid 1001 --gid $GID arka && \
+    adduser --disabled-password --gecos '' --uid 1002 --gid $GID forj
 
-COPY src/pyproject.toml src/poetry.lock* ./
-COPY src/select_modular_branches.py ./
-
-# Run branch selector (Sets the branches in pyproject.toml)
-RUN if [ "$DJANGO_ENV" = "development" ]; then \
-    pip install toml; \
-    python select_modular_branches.py 2>&1 | tee -a /tmp/dependency_logs/select_modular_branches.log; \
-    poetry lock; \
-    fi
-
-# Install dependencies, log operations to file
-RUN LOGFILE="/tmp/dependency_logs/dependency_install.log" && \
-    echo "Starting dependency installation..." | tee -a "$LOGFILE" && \
-    poetry install --only main --no-root 2>&1 | tee -a "$LOGFILE" && \
-    echo "Checking modular apps dependencies" | tee -a "$LOGFILE" && \
-    [ "$PYMAP_ENABLED" = 'True' ] && echo "Installing pymap dependencies" | tee -a "$LOGFILE" && poetry install --only pymap --no-root 2>&1 | tee -a "$LOGFILE"; \
-    [ "$AERA_ENABLED" = 'True' ] && echo "Installing aera dependencies" | tee -a "$LOGFILE" && poetry install --only aera --no-root 2>&1 | tee -a "$LOGFILE"; \
-    if [ "$DJANGO_ENV" = "development" ]; then \
-    echo "Development environment detected" | tee -a "$LOGFILE"; \
-    poetry install --only dev --no-root 2>&1 | tee -a "$LOGFILE"; \
-    echo "Active modular apps: pymap: $PYMAP_ENABLED, aera: $AERA_ENABLED" | tee -a "$LOGFILE"; \
-    echo "Finished installing dev dependencies" | tee -a "$LOGFILE"; \
-    fi
-
-# Move the logs to .venv so they are copied over to other stages
-RUN mkdir -p .venv/logs && \
-    mv /tmp/dependency_logs/*.log .venv/logs/
-
-### ARKA
-FROM python:3.13-slim AS arka
-
-# Helps track down issues in command execution
-SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-
-ARG DJANGO_ENV \
-    GROUPNAME \
-    GID \
-    STATIC_ROOT \
-    ARKA_LOGDIR
-
-# python:
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PYTHONDONTWRITEBYTECODE=1 \
-    # Poetry
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_HOME='/opt/pypoetry' \
-    POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON=true \
-    POETRY_INSTALLER_MAX_WORKERS=10 \
-    # APP
-    DJANGO_ENV=${DJANGO_ENV} \
-    STATIC_ROOT=${STATIC_ROOT} \
-    DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings} \
-    ARKA_LOGDIR=${ARKA_LOGDIR}
-
-
-RUN if [ "$DJANGO_ENV" = "development" ]; then \
-    apt-get update && \
-    apt-get install --no-install-recommends -y pipx && \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    apt-get clean -y && rm -rf /var/lib/apt/lists/*; \
-    fi
-
-# create user+group
-RUN addgroup --gid $GID $GROUPNAME \
-    && adduser --disabled-password --gecos '' --uid 1001 --gid $GID arka
-
-# Create the log directory and add permissions to user and group
-RUN mkdir -p $ARKA_LOGDIR
-RUN touch "$ARKA_LOGDIR/arka-dev.log" "$ARKA_LOGDIR/pymap.log"
-RUN chown -R arka:$GROUPNAME $ARKA_LOGDIR && chmod -R g+rw $ARKA_LOGDIR
-# Fix perms on static root for asset collection
-RUN mkdir -p $STATIC_ROOT
-RUN chown -R arka:$GROUPNAME $STATIC_ROOT && chmod -R g+rw $STATIC_ROOT
-
-# switch to user
-USER arka
-
-RUN if [ "$DJANGO_ENV" = "development" ]; then \
-    pipx install poetry && \
-    echo 'export PATH="/home/arka/.local/bin:$PATH"' >> /home/arka/.bashrc && \
-    echo 'export PATH="$POETRY_HOME/bin:$PATH"' >> /home/arka/.bashrc; \
-    fi
-ENV PATH="/home/arka/.local/bin:${PATH}"
-
-WORKDIR /home/arka/app
-
-COPY --from=builder /app/.venv /home/arka/app/.venv
-ENV PATH="/home/arka/app/.venv/bin:$PATH"
-
-COPY docker/scripts/django_init.sh /home/arka/app/init.sh
-COPY docker/scripts/copy_secrets.sh /home/arka/copy_secrets.sh
-COPY src/ .
-
-# fix perms
-USER root
-RUN chown -R arka:$GROUPNAME /home/arka/app
-USER arka
-
-EXPOSE 8000
-
-### FORJ
-FROM python:3.13-slim AS forj-worker
-
-# Helps track down issues in command execution
-SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-
-ARG DJANGO_ENV \
-    GROUPNAME \
-    GID \
-    STATIC_ROOT \
-    ARKA_LOGDIR
-
-# python:
-ENV PYTHONFAULTHANDLER=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PYTHONDONTWRITEBYTECODE=1 \
-    # Poetry
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_HOME='/opt/pypoetry' \
-    POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON=true \
-    POETRY_INSTALLER_MAX_WORKERS=10 \
-    # APP
-    DJANGO_ENV=${DJANGO_ENV} \
-    DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings} \
-    STATIC_ROOT=${STATIC_ROOT} \
-    ARKA_LOGDIR=${ARKA_LOGDIR}
-
-COPY docker/scripts/perl_deps.sh /tmp/perl_deps.sh
-RUN chmod +x /tmp/perl_deps.sh
-
-RUN apt update && \
-    bash /tmp/perl_deps.sh && \
-    if [ "$DJANGO_ENV" = "development" ]; then \
-    apt-get install --no-install-recommends -y pipx; \
-    fi && \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    apt-get clean -y && rm -rf /var/lib/apt/lists/*;
-
-
+# Copy imapsync from binary image
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
 
-# create user+group
-RUN addgroup --gid $GID $GROUPNAME \
-    && adduser --disabled-password --gecos '' --uid 1001 --gid $GID forj
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv/bin/uv
 
-# Create the log directory and add permissions to user and group
-RUN mkdir -p $ARKA_LOGDIR
-RUN touch "$ARKA_LOGDIR/arka-dev.log" "$ARKA_LOGDIR/pymap.log"
-RUN chown -R forj:$GROUPNAME $ARKA_LOGDIR && chmod -R g+rw $ARKA_LOGDIR
+# Create required directories and set ownership
+# Using 777 for logs and static to ensure compatibility with named volumes on all platforms
+RUN mkdir -p /app/scripts /app/src "$ARKA_LOGDIR" "$STATIC_ROOT" && \
+    chown -R arka:$GROUPNAME /app "$ARKA_LOGDIR" "$STATIC_ROOT" && \
+    chmod -R 775 /app "$ARKA_LOGDIR" "$STATIC_ROOT"
 
-# switch to user
-USER forj
+# Copy entrypoint script
+COPY docker/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-RUN if [ "$DJANGO_ENV" = "development" ]; then \
-    pipx install poetry && \
-    echo 'export PATH="/home/forj/.local/bin:$PATH"' >> /home/forj/.bashrc && \
-    echo 'export PATH="$POETRY_HOME/bin:$PATH"' >> /home/forj/.bashrc; \
-    fi
-ENV PATH="/home/forj/.local/bin:${PATH}"
+ENTRYPOINT ["docker-entrypoint.sh"]
 
+# Stage 2: Development
+FROM base AS development
+ARG DJANGO_ENV=development
+ENV DJANGO_ENV=${DJANGO_ENV}
+COPY pyproject.toml uv.lock* README.md ./
+# We don't copy modular apps yet to ensure uv sync can fetch git versions first
+RUN uv sync --frozen && \
+    chown -R arka:$GROUPNAME /app/.venv && \
+    chmod -R 775 /app/.venv
+# Now copy Everything including modular apps
+COPY . .
+# Perform editable installs for modular apps to override git versions
+RUN uv pip install -e src/modular_apps/AERA -e src/modular_apps/Pymap
+RUN cp -r docker/scripts/* /app/scripts/ && chmod +x /app/scripts/*.sh && \
+    chown -R arka:$GROUPNAME /app
+CMD ["/app/scripts/django_init.sh"]
 
-WORKDIR /home/forj/app
+# Stage 3: Builder - Resolve dependencies for production
+FROM base AS production-builder
+ARG ENABLE_AERA=false
+ARG ENABLE_PYMAP=false
+ARG MODULE_SOURCE=git
+COPY pyproject.toml uv.lock* README.md ./
+# Copy core source
+COPY src/arka /app/src/arka
+COPY src/forj /app/src/forj
+# Conditionally copy local module sources (only used when MODULE_SOURCE=local)
+COPY src/modular_apps/ /tmp/modular_apps/
 
-COPY --from=builder /app/.venv /home/forj/app/.venv
-ENV PATH="/home/forj/app/.venv/bin:$PATH"
+# Install core deps, then conditionally install enabled modules
+RUN if [ "$MODULE_SOURCE" = "local" ]; then \
+    uv sync --frozen --no-dev --no-editable; \
+    if [ "$ENABLE_AERA" = "true" ]; then uv pip install /tmp/modular_apps/AERA; fi; \
+    if [ "$ENABLE_PYMAP" = "true" ]; then uv pip install /tmp/modular_apps/Pymap; fi; \
+    else \
+    EXTRAS=""; \
+    if [ "$ENABLE_AERA" = "true" ]; then EXTRAS="$EXTRAS --extra aera"; fi; \
+    if [ "$ENABLE_PYMAP" = "true" ]; then EXTRAS="$EXTRAS --extra pymap"; fi; \
+    uv sync --frozen --no-dev --no-editable $EXTRAS; \
+    fi; \
+    rm -rf /tmp/modular_apps
 
-COPY docker/scripts/celery_init.sh /home/forj/app/init.sh
-COPY docker/scripts/copy_secrets.sh /home/forj/copy_secrets.sh
-COPY src/ .
+# Stage 4: Production Base (Common for Arka and Forj)
+FROM base AS production-base
 
-# fix perms
-USER root
-RUN chown -R forj:$GROUPNAME /home/forj/app
-USER forj
+ARG ENABLE_AERA=false
+ARG ENABLE_PYMAP=false
+ARG DJANGO_ENV=production
+
+ENV DJANGO_ENV=${DJANGO_ENV} \
+    ENABLE_AERA=${ENABLE_AERA} \
+    ENABLE_PYMAP=${ENABLE_PYMAP} \
+    POSTGRES_DB=${POSTGRES_DB} \
+    POSTGRES_USER=${POSTGRES_USER} \
+    POSTGRES_HOST=${POSTGRES_HOST} \
+    POSTGRES_PORT=${POSTGRES_PORT}
+
+COPY --from=production-builder /app/.venv /app/.venv
+COPY src/arka /app/src/arka
+COPY src/forj /app/src/forj
+COPY src/static /app/src/static
+COPY src/templates /app/src/templates
+COPY src/manage.py /app/src/manage.py
+COPY docker/scripts/ /app/scripts/
+RUN chmod +x /app/scripts/*.sh && \
+    chown -R arka:$GROUPNAME /app
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Stage 5: Production Arka (Django)
+FROM production-base AS final-production
+EXPOSE 8000
+CMD ["/app/scripts/django_init.sh"]
+
+# Stage 6: Production Forj (Worker)
+FROM production-base AS final-production-worker
+CMD ["/app/scripts/celery_init.sh", "worker"]
+

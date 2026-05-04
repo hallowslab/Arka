@@ -1,67 +1,68 @@
 #!/usr/bin/env bash
+# django_init.sh
 set -e
 
+APP_DIR="/app"
+LOGFILE="$APP_DIR/django_init.txt"
 
-# Add poetry path for non interactive shells (docker command call)
-export PATH="$HOME/.local/bin:$PATH"
+# Explicitly use the virtualenv binaries
+VENV_BIN="$APP_DIR/.venv/bin"
+PYTHON_BIN="$VENV_BIN/python"
 
-USER_HOME=$(eval echo ~"$(whoami)")
-CURRENT_USER="$(whoami)"
+echo "POSTGRES_HOST: $POSTGRES_HOST"
+echo "POSTGRES_PORT: $POSTGRES_PORT"
+echo "POSTGRES_USER: $POSTGRES_USER"
+echo "POSTGRES_DB: $POSTGRES_DB"
 
-# Copy secrets
-"$USER_HOME/copy_secrets.sh"
+sleep 13
 
-echo "Running init.sh..." > django_init.txt
+# Use a subshell and tee to capture everything to the logfile AND stdout
+{
+    echo "--- django_init.sh started at $(date) ---"
+    echo "[DEBUG] Current user: $(id)"
+    echo "[DEBUG] APP_DIR: $APP_DIR"
+    echo "[DEBUG] ARKA_LOGDIR: $ARKA_LOGDIR"
+    
+    # Copy secrets
+    bash "$APP_DIR/scripts/copy_secrets.sh"
 
-# Handle editable modules in development
-if [ "$DJANGO_ENV" == "development" ] && [ ! -z "$ARKA_EDITABLE_MODULES" ]; then
-    echo "Development mode detected, installing editable modules: $ARKA_EDITABLE_MODULES" >> django_init.txt
-    IFS=',' read -ra ADDR <<< "$ARKA_EDITABLE_MODULES"
-    for module in "${ADDR[@]}"; do
-        if [ -d "/modules/$module" ]; then
-            echo "Installing editable module: $module" >> django_init.txt
-            "$USER_HOME/app/.venv/bin/python" -m pip install -e "/modules/$module" >> django_init.txt
-        else
-            echo "Warning: Module directory /modules/$module not found" >> django_init.txt
-        fi
-    done
-fi
+    echo "[DEBUG] Permissions check:"
+    ls -ld "$ARKA_LOGDIR" || echo "[WARN] Log dir not found"
+    ls -la "$APP_DIR/src/.secret" "$APP_DIR/src/config.dev.json" || echo "[WARN] Secret files not found"
 
+    echo "Running DB migration check..."
+    if ! "$PYTHON_BIN" src/manage.py migrate --no-input --check; then
+        echo "Running migrations..."
+        "$PYTHON_BIN" src/manage.py migrate --no-input
+    else
+        echo "No migrations needed."
+    fi
 
-echo "Running DB migration check..."
-if ! "$USER_HOME/app/.venv/bin/python" manage.py migrate --no-input --check >> django_init.txt; then
-    echo "Running migrations" >> django_init.txt
-    "$USER_HOME/app/.venv/bin/python" manage.py migrate --no-input >> django_init.txt
-else
-    echo "No migrations needed" >> django_init.txt
-fi
+    # Run the initadmin command
+    echo "Running initadmin command..."
+    "$PYTHON_BIN" src/manage.py initadmin || true
 
-# Run modular plugin migrations
-echo "Running modular plugin migrations..." >> django_init.txt
-"$USER_HOME/app/.venv/bin/python" manage.py migrate_modules >> django_init.txt
+    # Load periodic tasks fixture
+    echo "Loading periodic tasks..."
+    "$PYTHON_BIN" src/manage.py loaddata periodic_tasks || true
 
+    # Run the create_management_group command
+    echo "Running create_management_groups command..."
+    "$PYTHON_BIN" src/manage.py create_management_groups || true
 
-# Run the initadmin command (may fail if users already exist)
-echo "Running initadmin command" >> django_init.txt
-"$USER_HOME/app/.venv/bin/python" manage.py initadmin >> django_init.txt 2>&1 || true
+    # Collect static assets 
+    echo "Collecting static assets (STATIC_ROOT: $STATIC_ROOT)..."
+    "$PYTHON_BIN" src/manage.py collectstatic --no-input
 
-# Load periodic tasks fixture
-echo "Loading periodic tasks..." >> django_init.txt
-"$USER_HOME/app/.venv/bin/python" manage.py loaddata periodic_tasks >> django_init.txt 2>&1 || true
+    echo "--- django_init.sh finished setup at $(date) ---"
+} 2>&1 | tee -a "$LOGFILE"
 
-# Run the create_management_group command
-echo "Running create_management_groups command" >> django_init.txt
-"$USER_HOME/app/.venv/bin/python" manage.py create_management_groups >> django_init.txt 2>&1 || true
-
-# Collect static assets 
-"$USER_HOME/app/.venv/bin/python" manage.py collectstatic --no-input
-
-# Start the application
-echo "Starting app..." >> django_init.txt
+# Start the application (exec replaces the shell, so it must be outside the brace block for signals)
+echo "Starting app..." | tee -a "$LOGFILE"
 if [ "$DJANGO_ENV" == "production" ]; then
-    echo "Starting production server" >> django_init.txt
-    exec "$USER_HOME/app/.venv/bin/python" -m gunicorn arka.asgi:application -b 0.0.0.0:8000 -k uvicorn_worker.UvicornWorker
+    echo "Starting production server (Gunicorn)" | tee -a "$LOGFILE"
+    exec "$VENV_BIN/gunicorn" arka.asgi:application -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker
 else
-    echo "Starting development server" >> django_init.txt
-    exec poetry run python manage.py runserver 0.0.0.0:8000
+    echo "Starting development server (Runserver)" | tee -a "$LOGFILE"
+    exec "$PYTHON_BIN" src/manage.py runserver 0.0.0.0:8000
 fi

@@ -4,62 +4,64 @@ services:
       - rabbitmq_data_dev:/var/lib/rabbitmq
   postgres:
     volumes:
-      - pgdata_dev:/var/lib/postgresql
+      - pgdata_dev:/var/lib/postgresql/data
   arka:
+    build:
+      context: .
+      target: development
     environment:
-      - ARKA_DEV_MODE=true
-      - ARKA_EDITABLE_MODULES=pymap,aera
-      - ARKA_ENABLED_MODULES=pymap,aera
-      - PYMAP_LOCAL_PATH=${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}
-      - AERA_LOCAL_PATH=${AERA_LOCAL_PATH:-./src/modular_apps/AERA}
+      - DJANGO_ENV=development
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - STATIC_ROOT=/var/www/static
     volumes:
-      - shared_logs_dev:$ARKA_LOGDIR
-      - static_root_dev:$STATIC_ROOT
-      - ./src/arka:/home/arka/app/arka/
-      - ./src/templates:/home/arka/app/templates
-      - ./src/static:/home/arka/app/static
-      - ./src/forj:/home/arka/app/forj/
-      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
-      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
+      - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - static_root_dev:/var/www/static
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
     ports:
       - "8000:8000"
-    command: /home/arka/app/init.sh
-    # command: tail -f /dev/null
+    command: /app/scripts/django_init.sh
 
   forj:
+    build:
+      context: .
+      target: development
     environment:
-      - ARKA_DEV_MODE=true
-      - ARKA_EDITABLE_MODULES=pymap,aera
-      - ARKA_ENABLED_MODULES=pymap,aera
-      - PYMAP_LOCAL_PATH=${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}
-      - AERA_LOCAL_PATH=${AERA_LOCAL_PATH:-./src/modular_apps/AERA}
+      - DJANGO_ENV=development
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
     volumes:
-      - shared_logs_dev:$ARKA_LOGDIR
-      - static_root_dev:$STATIC_ROOT
-      - ./src/arka:/home/forj/app/arka/
-      - ./src/templates:/home/forj/app/templates
-      - ./src/static:/home/forj/app/static
-      - ./src/forj:/home/forj/app/forj/
-      - ./src/db.sqlite3:/home/forj/app/db.sqlite3
-      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
-      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
-    command: /home/forj/app/init.sh worker
+      - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    command: /app/scripts/celery_init.sh worker
 
   forj-scheduler:
+    build:
+      context: .
+      target: development
     environment:
-      - ARKA_DEV_MODE=true
-      - ARKA_ENABLED_MODULES=pymap,aera
-      - ARKA_EDITABLE_MODULES=pymap,aera
+      - DJANGO_ENV=development
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
     volumes:
-      - shared_logs_dev:$ARKA_LOGDIR
-      - static_root_dev:$STATIC_ROOT
-      - ./src/arka:/home/forj/app/arka/
-      - ./src/templates:/home/forj/app/templates
-      - ./src/static:/home/forj/app/static
-      - ./src/forj:/home/forj/app/forj/
-      - ${PYMAP_LOCAL_PATH:-./src/modular_apps/Pymap}:/modules/pymap
-      - ${AERA_LOCAL_PATH:-./src/modular_apps/AERA}:/modules/aera
-    command: /home/forj/app/init.sh beat
+      - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    command: /app/scripts/celery_init.sh beat
 
 volumes:
   pgdata_dev:

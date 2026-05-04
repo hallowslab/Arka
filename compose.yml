@@ -37,13 +37,19 @@ services:
     restart: unless-stopped
     hostname: postgres-arka
     environment:
+      PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: ${POSTGRES_DB:-arka}
       POSTGRES_USER: ${POSTGRES_USER:-arka}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST:-127.0.0.1}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arka} -d ${POSTGRES_DB:-arka}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
-      - pgdata:/var/lib/postgresql
+      - pgdata:/var/lib/postgresql/data
   # ---------- DB Pooling -----------
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
@@ -67,28 +73,37 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: arka
+      target: final-production
       args:
-        GROUPNAME: ${CONTAINER_GROUP:-arka}
-        GID: 1002
-        DJANGO_ENV: ${DJANGO_ENV}
-        PYMAP_ENABLED: ${PYMAP_ENABLED}
-        AERA_ENABLED: ${AERA_ENABLED}
-        DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
-        STATIC_ROOT: ${STATIC_ROOT}
-        ARKA_LOGDIR: ${ARKA_LOGDIR}
+        ENABLE_AERA: ${ENABLE_AERA:-false}
+        ENABLE_PYMAP: ${ENABLE_PYMAP:-false}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-arka}
+      - POSTGRES_USER=${POSTGRES_USER:-arka}
+      - POSTGRES_HOST=pgbouncer-arka
+      - POSTGRES_PORT=6432
+      - DJANGO_ENV=${DJANGO_ENV:-production}
+      - STATIC_ROOT=${STATIC_ROOT}
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
+      - CONTAINER_USER=arka
+      - PYTHONPATH=/app/src
     ports:
       - "8000:8000"
     depends_on:
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     volumes:
-      - shared_logs:$ARKA_LOGDIR
+      - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root:$STATIC_ROOT
       - type: bind
         source: ./secrets
         target: /run/secrets
         read_only: true
-    command: bash -c '/home/arka/app/init.sh'
+    command: /app/scripts/django_init.sh
   # ---------- Nginx ----------
   arka.internal:
     build:
@@ -114,20 +129,21 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: forj-worker
+      target: final-production-worker
       args:
-        GROUPNAME: ${CONTAINER_GROUP:-arka}
-        GID: 1002
-        DJANGO_ENV: ${DJANGO_ENV}
-        PYMAP_ENABLED: ${PYMAP_ENABLED}
-        AERA_ENABLED: ${AERA_ENABLED}
-        DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
-        STATIC_ROOT: ${STATIC_ROOT}
-        ARKA_LOGDIR: ${ARKA_LOGDIR}
+        ENABLE_AERA: ${ENABLE_AERA:-false}
+        ENABLE_PYMAP: ${ENABLE_PYMAP:-false}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+    environment:
+      - DJANGO_ENV=${DJANGO_ENV:-production}
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
+      - CONTAINER_USER=forj
+      - PYTHONPATH=/app/src
     depends_on:
       - rabbitmq
     volumes:
-      - shared_logs:$ARKA_LOGDIR
+      - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -135,7 +151,7 @@ services:
     deploy:
       mode: replicated
       replicas: ${WORKER_REPLICAS:-1}
-    command: bash -c '/home/forj/app/init.sh worker'
+    command: /app/scripts/celery_init.sh worker
   # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base
@@ -144,12 +160,12 @@ services:
     depends_on:
       - forj
     volumes:
-      - shared_logs:$ARKA_LOGDIR
+      - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - type: bind
         source: ./secrets
         target: /run/secrets
         read_only: true
-    command: bash -c '/home/forj/app/init.sh beat'
+    command: /app/scripts/celery_init.sh beat
 
   pgadmin:
     image: dpage/pgadmin4:latest

@@ -1,15 +1,9 @@
 import os
 import json
 import tempfile
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from pathlib import Path
 from urllib.parse import quote
-from importlib.util import find_spec
-
-
-def app_exists(name):
-    return find_spec(name) is not None
-
 
 def load_secret_key(environment: str, base_dir: Path) -> Optional[str]:
     key = None

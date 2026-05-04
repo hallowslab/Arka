@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[INFO] Running copy_secrets.sh"
+echo "[INFO] Running copy_secrets.sh as $(whoami) (id: $(id))"
 
-# Determine the home dir of the current user
-USER_HOME=$(eval echo ~"$(whoami)")
 SECRETS_DIR="/run/secrets"
-APP_DIR="$USER_HOME/app"
+# The Django app's BASE_DIR is /app/src
+APP_DIR="/app/src"
+
+# Ensure we are in a safe directory
+cd "/app"
 
 declare -A FILE_MAP=(
-  [".pg_service.conf"]="$USER_HOME/.pg_service.conf"
-  [".pgpass"]="$APP_DIR/.pgpass"
+  [".pg_service.conf"]="$HOME/.pg_service.conf"
+  [".pgpass"]="$HOME/.pgpass"
   [".secret"]="$APP_DIR/.secret"
   ["config.json"]="$APP_DIR/config.json"
   ["config.dev.json"]="$APP_DIR/config.dev.json"
@@ -22,13 +24,17 @@ for src_file in "${!FILE_MAP[@]}"; do
     dest_path="${FILE_MAP[$src_file]}"
 
     if [ -f "$src_path" ]; then
-        cp "$src_path" "$dest_path"
-        echo "[INFO] Copied $src_file to $dest_path"
-
-        # Secure permissions
-        chmod 600 "$dest_path"
-        chown "$(whoami):arka" "$dest_path"
-        echo "[INFO] Set ownership and permissions for $dest_path"
+        mkdir -p "$(dirname "$dest_path")"
+        tmp_dest="${dest_path}.tmp.$RANDOM"
+        cp "$src_path" "$tmp_dest"
+        # 600 for .pgpass and pg_service, 644 for others
+        if [[ "$src_file" == ".pgpass" || "$src_file" == ".pg_service.conf" ]]; then
+            chmod 600 "$tmp_dest"
+        else
+            chmod 644 "$tmp_dest"
+        fi
+        mv -f "$tmp_dest" "$dest_path"
+        echo "[INFO] Copied $src_file to $dest_path (atomically)"
     else
         echo "[WARN] Secret file $src_path not found; skipping"
     fi

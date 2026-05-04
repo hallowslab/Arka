@@ -1,54 +1,42 @@
 #!/usr/bin/env bash
+# celery_init.sh
 set -euo pipefail
 
 ROLE="${1:-worker}"
+APP_DIR="/app"
+LOGFILE="$APP_DIR/celery_init.txt"
 
-USER_HOME=$(eval echo ~"$(whoami)")
-CURRENT_USER="$(whoami)"
-VENV_PY="$USER_HOME/app/.venv/bin/python"
-DJANGO_ENV="${DJANGO_ENV:-development}"
+# Explicitly use the virtualenv binaries
+VENV_BIN="$APP_DIR/.venv/bin"
+PYTHON_BIN="$VENV_BIN/python"
+CELERY_BIN="$VENV_BIN/celery"
 
-# Copy secrets
-"$USER_HOME/copy_secrets.sh"
+{
+    echo "--- celery_init.sh started at $(date) as role: $ROLE ---"
+    echo "[DEBUG] Current user: $(id)"
 
-LOGFILE="celery_init.txt"
-echo "Running init.sh as role: $ROLE" | tee "$LOGFILE"
+    # Copy secrets
+    bash "$APP_DIR/scripts/copy_secrets.sh"
 
-# Only install dependencies in development
-if [ "$DJANGO_ENV" = "development" ]; then
-  echo "Development mode detected, synchronizing dependencies..." | tee -a "$LOGFILE"
-  poetry sync >> "$LOGFILE" 2>&1
-fi
-
-# Handle editable modules in development
-if [ "$DJANGO_ENV" = "development" ] && [ -n "${ARKA_EDITABLE_MODULES:-}" ]; then
-    echo "Development mode detected, installing editable modules: $ARKA_EDITABLE_MODULES" | tee -a "$LOGFILE"
-    IFS=',' read -ra ADDR <<< "$ARKA_EDITABLE_MODULES"
-    for module in "${ADDR[@]}"; do
-        if [ -d "/modules/$module" ]; then
-            echo "Installing editable module: $module" | tee -a "$LOGFILE"
-            "$VENV_PY" -m pip install -e "/modules/$module" >> "$LOGFILE" 2>&1
-        else
-            echo "Warning: Module directory /modules/$module not found" | tee -a "$LOGFILE"
-        fi
+    # Wait for migrations to be ready
+    echo "Waiting for migrations to be applied..."
+    while ! "$PYTHON_BIN" src/manage.py migrate --check; do
+      echo "Migrations not ready yet or check failed. Retrying in 5s..."
+      # Run once with output to log if it keeps failing
+      "$PYTHON_BIN" src/manage.py migrate --check || true
+      sleep 5
     done
-fi
+    echo "Migrations are ready!"
 
-# Wait for migrations to be ready
-echo "Waiting for migrations to be applied..." | tee -a "$LOGFILE"
-until "$VENV_PY" manage.py migrate --check >> "$LOGFILE" 2>&1; do
-  echo "Migrations not ready yet. Waiting 5 seconds..." | tee -a "$LOGFILE"
-  sleep 5
-done
-echo "Migrations are ready!" | tee -a "$LOGFILE"
+} 2>&1 | tee -a "$LOGFILE"
 
 case "$ROLE" in
   worker)
     echo "Starting Celery worker..." | tee -a "$LOGFILE"
 
-    if [ "$DJANGO_ENV" = "production" ]; then
+    if [ "${DJANGO_ENV:-development}" = "production" ]; then
       echo "Production worker mode" | tee -a "$LOGFILE"
-      exec "$VENV_PY" -m celery \
+      exec "$CELERY_BIN" \
         -A forj.celery worker \
         --pool=prefork \
         -c 20 \
@@ -59,7 +47,7 @@ case "$ROLE" in
         --loglevel=info
     else
       echo "Development worker mode" | tee -a "$LOGFILE"
-      exec "$VENV_PY" -m celery \
+      exec "$CELERY_BIN" \
         -A forj.celery worker \
         --pool=solo \
         --hostname=worker@%h \
@@ -69,16 +57,16 @@ case "$ROLE" in
 
   beat)
     echo "Starting Celery Beat scheduler..." | tee -a "$LOGFILE"
-    if [ "$DJANGO_ENV" = "production" ]; then
+    if [ "${DJANGO_ENV:-development}" = "production" ]; then
       echo "Production beat mode" | tee -a "$LOGFILE"
-      exec "$VENV_PY" -m celery \
+      exec "$CELERY_BIN" \
         -A forj.celery beat \
-        -l ${FORJ_LOG_LEVEL:-INFO} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
+        -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler -f "$ARKA_LOGDIR/beat.log"
     else
       echo "Development beat mode" | tee -a "$LOGFILE"
-      exec "$VENV_PY" -m celery \
+      exec "$CELERY_BIN" \
         -A forj.celery beat \
-        -l ${FORJ_LOG_LEVEL:-DEBUG} --scheduler django_celery_beat.schedulers:DatabaseScheduler -f $ARKA_LOGDIR/beat.log
+        -l DEBUG --scheduler django_celery_beat.schedulers:DatabaseScheduler -f "$ARKA_LOGDIR/beat.log"
     fi
     ;;
 
