@@ -60,25 +60,34 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Stage 2: Development
 FROM base AS development
+ARG ENABLED_APPS=""
+ARG MODULE_SOURCE=git
+ARG CELERY_POOL=solo
 ARG DJANGO_ENV=development
-ENV DJANGO_ENV=${DJANGO_ENV}
+ENV DJANGO_ENV=${DJANGO_ENV} \
+    CELERY_POOL=${CELERY_POOL} \
+    ENABLED_APPS=${ENABLED_APPS}
 COPY pyproject.toml uv.lock* README.md ./
 # We don't copy modular apps yet to ensure uv sync can fetch git versions first
 RUN uv sync --frozen && \
     chown -R arka:$GROUPNAME /app/.venv && \
     chmod -R 775 /app/.venv
 # Now copy Everything including modular apps
-COPY . .
+COPY src/ ./src/
 # Perform editable installs for modular apps to override git versions
-RUN uv pip install -e src/modular_apps/AERA -e src/modular_apps/Pymap
-RUN cp -r docker/scripts/* /app/scripts/ && chmod +x /app/scripts/*.sh && \
-    chown -R arka:$GROUPNAME /app
+RUN uv pip install -e src/modular_apps/AERA \
+    -e src/modular_apps/Pymap \
+    -e src/modular_apps/DBTOOL \
+    -e src/modular_apps/NETTOOLS
+
+COPY docker/scripts/ /app/scripts/
+RUN chmod +x /app/scripts/*.sh && chown -R arka:$GROUPNAME /app
+
 CMD ["/app/scripts/django_init.sh"]
 
 # Stage 3: Builder - Resolve dependencies for production
 FROM base AS production-builder
-ARG ENABLE_AERA=false
-ARG ENABLE_PYMAP=false
+ARG ENABLED_APPS=""
 ARG MODULE_SOURCE=git
 COPY pyproject.toml uv.lock* README.md ./
 # Copy core source
@@ -90,12 +99,16 @@ COPY src/modular_apps/ /tmp/modular_apps/
 # Install core deps, then conditionally install enabled modules
 RUN if [ "$MODULE_SOURCE" = "local" ]; then \
     uv sync --frozen --no-dev --no-editable; \
-    if [ "$ENABLE_AERA" = "true" ]; then uv pip install /tmp/modular_apps/AERA; fi; \
-    if [ "$ENABLE_PYMAP" = "true" ]; then uv pip install /tmp/modular_apps/Pymap; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "AERA"; then uv pip install /tmp/modular_apps/AERA; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "PYMAP"; then uv pip install /tmp/modular_apps/Pymap; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "DBTOOL"; then uv pip install /tmp/modular_apps/DBTOOL; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "NETTOOLS"; then uv pip install /tmp/modular_apps/NETTOOLS; fi; \
     else \
     EXTRAS=""; \
-    if [ "$ENABLE_AERA" = "true" ]; then EXTRAS="$EXTRAS --extra aera"; fi; \
-    if [ "$ENABLE_PYMAP" = "true" ]; then EXTRAS="$EXTRAS --extra pymap"; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "AERA"; then EXTRAS="$EXTRAS --extra aera"; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "PYMAP"; then EXTRAS="$EXTRAS --extra pymap"; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "DBTOOL"; then EXTRAS="$EXTRAS --extra dbtool"; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "NETTOOLS"; then EXTRAS="$EXTRAS --extra nettools"; fi; \
     uv sync --frozen --no-dev --no-editable $EXTRAS; \
     fi; \
     rm -rf /tmp/modular_apps
@@ -103,13 +116,13 @@ RUN if [ "$MODULE_SOURCE" = "local" ]; then \
 # Stage 4: Production Base (Common for Arka and Forj)
 FROM base AS production-base
 
-ARG ENABLE_AERA=false
-ARG ENABLE_PYMAP=false
+ARG ENABLED_APPS=""
 ARG DJANGO_ENV=production
+ARG CELERY_POOL=gevent
 
 ENV DJANGO_ENV=${DJANGO_ENV} \
-    ENABLE_AERA=${ENABLE_AERA} \
-    ENABLE_PYMAP=${ENABLE_PYMAP} \
+    CELERY_POOL=${CELERY_POOL} \
+    ENABLED_APPS=${ENABLED_APPS} \
     POSTGRES_DB=${POSTGRES_DB} \
     POSTGRES_USER=${POSTGRES_USER} \
     POSTGRES_HOST=${POSTGRES_HOST} \

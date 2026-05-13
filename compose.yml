@@ -3,7 +3,7 @@ services:
   redis:
     image: "docker.io/library/redis:latest"
     ports:
-      - "6379:6379"
+      - "6379"
     restart: unless-stopped
   # ---------- Broker ----------
   rabbitmq:
@@ -14,7 +14,8 @@ services:
     container_name: rabbitmq-arka
     hostname: rabbitmq
     ports:
-      - "5672:5672"
+      - "5672"
+      - "15692"
       - "15672:15672"
     restart: unless-stopped
     environment:
@@ -33,7 +34,7 @@ services:
   postgres:
     image: "docker.io/library/postgres:latest"
     ports:
-      - "5432:5432"
+      - "5432"
     restart: unless-stopped
     hostname: postgres-arka
     environment:
@@ -64,10 +65,28 @@ services:
       - PGBOUNCER_MAX_CLIENT_CONN=100
       - PGBOUNCER_DEFAULT_POOL_SIZE=25
     ports:
-      - "6432:6432"
+      - "6432"
     restart: unless-stopped
     depends_on:
       - postgres
+  # ---------- Nginx ----------
+  arka.internal:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.nginx
+      args:
+        GID: 1002
+        GROUPNAME: ${CONTAINER_GROUP:-arka}
+    ports:
+      - "5001:80"
+      - "5000:443"
+    environment:
+      STATIC_ROOT: ${STATIC_ROOT}
+    volumes:
+      - ./docker/templates:/etc/nginx/templates
+      - static_root:/var/www/static:ro
+    depends_on:
+      - arka
   # ---------- Arka-django ----------
   arka:
     build:
@@ -75,8 +94,7 @@ services:
       dockerfile: Dockerfile
       target: final-production
       args:
-        ENABLE_AERA: ${ENABLE_AERA:-false}
-        ENABLE_PYMAP: ${ENABLE_PYMAP:-false}
+        ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-arka}
@@ -104,24 +122,6 @@ services:
         target: /run/secrets
         read_only: true
     command: /app/scripts/django_init.sh
-  # ---------- Nginx ----------
-  arka.internal:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.nginx
-      args:
-        GID: 1002
-        GROUPNAME: ${CONTAINER_GROUP:-arka}
-    ports:
-      - "5001:80"
-      - "5000:443"
-    environment:
-      STATIC_ROOT: ${STATIC_ROOT}
-    volumes:
-      - ./docker/templates:/etc/nginx/templates
-      - static_root:/var/www/static:ro
-    depends_on:
-      - arka
   # ---------- Forj-celery ----------
   forj: &forj_base
     init: true
@@ -131,11 +131,12 @@ services:
       dockerfile: Dockerfile
       target: final-production-worker
       args:
-        ENABLE_AERA: ${ENABLE_AERA:-false}
-        ENABLE_PYMAP: ${ENABLE_PYMAP:-false}
+        ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-gevent}
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
+      - CELERY_POOL=${CELERY_POOL:-gevent}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=forj
@@ -167,25 +168,123 @@ services:
         read_only: true
     command: /app/scripts/celery_init.sh beat
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-arka}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arka}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
     profiles:
       - monitor
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    restart: unless-stopped
+    command:
+      - -nginx.scrape-uri=http://arka.internal/nginx_status
+    depends_on:
+      - arka.internal
+    profiles:
+      - monitor
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-arka
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    profiles:
+      - monitor
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-arka
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
+    profiles:
+      - monitor
+      - dashboard
+
+  dovecotsource:
+    image: hallowtechlab/dovecot:debian-trixie
+    container_name: dovecotsource
+    ports:
+      - "143:143"
+    volumes:
+      - ./docker/dovecot/users.csv:/users.csv:ro
+    environment:
+      POPULATE_INBOX: "true"
+      MIN_MESSAGES: "10"
+      MAX_MESSAGES: "30"
+    profiles:
+      - dovecot
+
+  dovecotdest:
+    image: hallowtechlab/dovecot:debian-trixie
+    container_name: dovecotdest
+    ports:
+      - "2143:143"
+    volumes:
+      - ./docker/dovecot/users.csv:/users.csv:ro
+    environment:
+      POPULATE_INBOX: "false"
+      MIN_MESSAGES: "10"
+      MAX_MESSAGES: "30"
+    profiles:
+      - dovecot
+
+  # webmail-source:
+  #   image: roundcube/roundcubemail:latest
+  #   depends_on:
+  #     - dovecotsource
+  #   environment:
+  #     ROUNDCUBEMAIL_DEFAULT_HOST: tcp://dovecotsource:143
+  #     ROUNDCUBEMAIL_SMTP_SERVER: localhost
+  #   ports:
+  #     - "8083:80"
+  #   profiles:
+  #     - dovecot
+
+  # webmail-destination:
+  #   image: roundcube/roundcubemail:latest
+  #   depends_on:
+  #     - dovecotdest
+  #   environment:
+  #     ROUNDCUBEMAIL_DEFAULT_HOST: tcp://dovecotdest:143
+  #     ROUNDCUBEMAIL_SMTP_SERVER: localhost
+  #   ports:
+  #     - "8084:80"
+  #   profiles:
+  #     - dovecot
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@arka.internal}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-PGAdmin}
     ports:
       - 9001:80
+    profiles:
+      - tools
   rinsight:
     image: redislabs/redisinsight:latest
-    profiles:
-      - monitor
     restart: always
     ports:
       - 5540:5540
+    profiles:
+      - tools
 
 volumes:
   pgdata:
   static_root:
   rabbitmq_data:
   shared_logs:
+  grafana_data:

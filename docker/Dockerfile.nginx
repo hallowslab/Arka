@@ -1,14 +1,14 @@
-FROM nginx:latest
+FROM nginx:1.29.8-trixie
 
 ARG GID=1002
 ARG GROUPNAME=arka
 
 # Install openssl
 RUN apt-get update && \
-    apt-get install -y openssl && \
+    apt-get install -y --no-install-recommends openssl && \
     rm -rf /var/lib/apt/lists/*
 
-# Create SSL directory
+# Create SSL directories
 RUN mkdir -p /etc/ssl/private /etc/ssl/certs
 
 # Generate self-signed SSL certificate and private key
@@ -23,4 +23,5 @@ RUN chown -R root:root /etc/ssl/private /etc/ssl/certs && \
     chmod 644 /etc/ssl/certs/nginx-selfsigned.crt
 
 # Optional: Add the group for shared volumes
-RUN addgroup --gid $GID $GROUPNAME || true
+RUN getent group ${GROUPNAME} || \
+    groupadd --gid ${GID} ${GROUPNAME}

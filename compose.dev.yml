@@ -9,10 +9,14 @@ services:
     build:
       context: .
       target: development
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
     environment:
       - DJANGO_ENV=development
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - STATIC_ROOT=/var/www/static
+      - ENABLED_APPS=${ENABLED_APPS:-""}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root_dev:/var/www/static
@@ -31,8 +35,13 @@ services:
     build:
       context: .
       target: development
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
       - DJANGO_ENV=development
+      - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
@@ -49,8 +58,13 @@ services:
     build:
       context: .
       target: development
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
       - DJANGO_ENV=development
+      - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
