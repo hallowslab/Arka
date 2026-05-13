@@ -1,2 +1,12 @@
-html, body { height: 100%; }
-.full-height { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+html,
+body {
+    min-height: 100vh;
+    min-width: 100vw;
+}
+
+.full-height {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}

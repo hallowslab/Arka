@@ -1,31 +1,111 @@
 /* elements for light mode */
 body.has-background-light {
     --surface-bg: #ffffff;
-    --surface-text: #363636;
-    --notif-text: #ffffff;
-    --notif-bg: #2b2b2b;
-    --hr-color: hsl(221, 14%, 9%);
-    --card-bg: #2b2b2b;
-    --card-text: #ffffff;
+    --surface-text: #2b2b2b;
+    --notif-bg: #f5f5f5;
+    --notif-text: #2b2b2b;
+    --hr-color: #dbdbdb;
+    --card-bg: #ffffff;
+    --card-text: #2b2b2b;
+    --help-text: #7a7a7a;
+
+    /* Bulma 1.0+ variables */
+    --bulma-body-background-color: #ffffff;
+    --bulma-text: #2b2b2b;
+    --bulma-title-color: #2b2b2b;
+    --bulma-subtitle-color: #4a4a4a;
+    --bulma-link: #3273dc;
+    --bulma-input-color: #2b2b2b;
+    --bulma-input-background-color: #ffffff;
+    --bulma-input-placeholder-color: #7a7a7a;
+    --bulma-label-color: #2b2b2b;
+    --bulma-table-color: #2b2b2b;
+    --bulma-table-background-color: #ffffff;
+    --bulma-tag-background-color: #f5f5f5;
+    --bulma-tag-color: #2b2b2b;
 }
 
 /* elements for dark mode */
 body.has-background-dark {
     --surface-bg: #1e1e1e;
     --surface-text: #e0e0e0;
-    --notif-text: #ffffff;
     --notif-bg: #2b2b2b;
-    --hr-color: hsl(198deg, 100%, 14%);
+    --notif-text: #ffffff;
+    --hr-color: #363636;
     --card-bg: #2b2b2b;
     --card-text: #ffffff;
+    --help-text: #b5b5b5;
+
+    /* Bulma 1.0+ variables */
+    --bulma-body-background-color: #1e1e1e;
+    --bulma-text: #e0e0e0;
+    --bulma-title-color: #ffffff;
+    --bulma-subtitle-color: #b5b5b5;
+    --bulma-link: #48c78e;
+    --bulma-input-color: #e0e0e0;
+    --bulma-input-background-color: #2b2b2b;
+    --bulma-input-placeholder-color: #888888;
+    --bulma-label-color: #e0e0e0;
+    --bulma-table-color: #e0e0e0;
+    --bulma-table-background-color: #1e1e1e;
+    --bulma-tag-background-color: #2b2b2b;
+    --bulma-tag-color: #ffffff;
 }
 
-/* Surface components: box, card, input, anchor-card */
+/* Surface components: box, card, input, textarea, select, labels, tables */
 .box,
-input.input
-{
+.input,
+.textarea,
+.select select,
+.label,
+.table {
     background-color: var(--surface-bg);
     color: var(--surface-text);
+}
+
+.table thead th,
+.table thead td {
+    color: var(--surface-text);
+}
+
+.table.is-striped tbody tr:not(.is-selected):nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+body.has-background-dark .table.is-striped tbody tr:not(.is-selected):nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover {
+    background-color: rgba(128, 128, 128, 0.2) !important;
+    color: inherit !important;
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover td {
+    color: inherit !important;
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover a:not(.button) {
+    color: var(--bulma-link, #485fc7) !important;
+}
+
+/* Ensure placeholder text is visible */
+.input::placeholder,
+.textarea::placeholder {
+    color: var(--help-text) !important;
+    opacity: 1;
+}
+
+/* Specific fix for labels and strong text to ensure visibility */
+.label,
+td,
+strong {
+    color: var(--surface-text) !important;
+}
+
+/* Help text */
+.help {
+    color: var(--help-text) !important;
 }
 
 /* Card element */
@@ -34,7 +114,7 @@ input.input
     color: var(--card-text);
 }
 
-/* Nreak element */
+/* Break element */
 hr {
     border: none;
     height: 2px;
@@ -58,7 +138,7 @@ a.card:hover {
 
 /* Global titles outside surfaces */
 body.has-background-light.has-text-dark :is(.title, .subtitle) {
-    color: hsl(var(--bulma-dark-h), var(--bulma-dark-s), var(--bulma-dark-l));
+    color: var(--surface-text);
 }
 
 /* Exclude titles/subtitles inside cards and notifications */
@@ -66,17 +146,18 @@ body.has-background-light.has-text-dark .card .title,
 body.has-background-light.has-text-dark .card .subtitle,
 body.has-background-light.has-text-dark .notification .title,
 body.has-background-light.has-text-dark .notification .subtitle {
-    color: inherit !important; /* use inherited color for surfaces */
+    color: inherit !important;
+    /* use inherited color for surfaces */
 }
 
 /* ===== Notification-specific theming ===== */
-body.has-background-light .notification,
-body.has-background-dark .notification {
+/* Only apply custom colors to plain notifications without is- modifiers */
+.notification:not([class*="is-"]) {
     background-color: var(--notif-bg);
     color: var(--notif-text);
 }
 
-/* Ensure titles/subtitles inside notifications inherit text color */
+/* Ensure titles/subtitles inside notifications and other surfaces inherit text color */
 .notification .title,
 .notification .subtitle,
 .box .title,
@@ -84,4 +165,20 @@ body.has-background-dark .notification {
 .card .title,
 .card .subtitle {
     color: inherit !important;
+}
+
+/* Fix for tags - ensure they don't inherit white text if they have light background */
+.tag.is-light {
+    background-color: var(--notif-bg) !important;
+    color: var(--notif-text) !important;
+}
+
+/* Ensure body text in light mode is dark enough */
+body.has-background-light {
+    color: #2b2b2b;
+}
+
+/* Ensure body text in dark mode is light enough */
+body.has-background-dark {
+    color: #e0e0e0;
 }

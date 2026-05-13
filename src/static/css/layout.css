@@ -76,8 +76,8 @@
 /* Topbar */
 .topbar {
     height: 56px;
-    background: white;
-    border-bottom: 1px solid #ddd;
+    background: var(--surface-bg);
+    border-bottom: 1px solid var(--hr-color);
     display: flex;
     align-items: center;
     padding: 0 1rem;
@@ -85,4 +85,5 @@
     position: sticky;
     top: 0;
     z-index: 20;
+    color: var(--surface-text);
 }
