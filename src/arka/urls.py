@@ -50,10 +50,6 @@ urlpatterns = [
     # Base site
     path("", views.dashboard, name="dashboard"),
     path("profile/", views.profile, name="user_profile"),
-    # Monitoring Details
-    path("monitoring/database/", views.monitor_database, name="monitor_database"),
-    path("monitoring/redis/", views.monitor_redis, name="monitor_redis"),
-    path("monitoring/rabbitmq/", views.monitor_rabbitmq, name="monitor_rabbitmq"),
 ]
 
 from django.conf import settings

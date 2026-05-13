@@ -14,49 +14,5 @@
             "every": 10,
             "period": "seconds"
         }
-    },
-    {
-        "model": "django_celery_beat.periodictask",
-        "pk": 1,
-        "fields": {
-            "name": "perform_system_checks",
-            "task": "arka.tasks.perform_system_checks",
-            "interval": 1,
-            "enabled": true,
-            "headers": "{}",
-            "one_off": false,
-            "start_time": null,
-            "priority": null,
-            "queue": null,
-            "exchange": null,
-            "routing_key": null,
-            "args": "[]",
-            "kwargs": "{}",
-            "expires": null,
-            "expire_seconds": null,
-            "date_changed": "2026-01-01T00:00:00Z"
-        }
-    },
-    {
-        "model": "django_celery_beat.periodictask",
-        "pk": 2,
-        "fields": {
-            "name": "forj-worker-hearthbeat",
-            "task": "forj.tasks.worker_heartbeat",
-            "interval": 2,
-            "enabled": true,
-            "headers": "{}",
-            "one_off": false,
-            "start_time": null,
-            "priority": null,
-            "queue": null,
-            "exchange": null,
-            "routing_key": null,
-            "args": "[]",
-            "kwargs": "{}",
-            "expires": null,
-            "expire_seconds": null,
-            "date_changed": "2026-01-01T00:00:00Z"
-        }
     }
 ]

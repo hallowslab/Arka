@@ -4,92 +4,36 @@
 
 {% block content %}
 <div class="columns is-multiline">
-    <div class="column is-one-third">
-        <!-- Database card -->
-        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_database' %}'">
-            <div class="card-content">
-                <div class="level mb-2">
-                    <div class="level-left">
-                        <div>
-                            <p class="title is-5">Database</p>
-                            {% if timestamp %}
-                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="level-right">
-                        {% if checks.database.status == "ok" %}
-                        <span class="tag is-success">OK</span>
-                        {% else %}
-                        <span class="tag is-danger">ERROR</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <p class="is-size-7">
-                    {{ checks.database.message }}
-                </p>
-            </div>
+    <div class="column is-full">
+        <div class="notification is-info">
+            Welcome to the Arka Dashboard. Custom monitoring has been replaced by Prometheus and Grafana.
         </div>
-
     </div>
-    <div class="column is-one-third">
-        <!-- Redis card -->
-        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_redis' %}'">
-            <div class="card-content">
-                <div class="level mb-2">
-                    <div class="level-left">
-                        <div>
-                            <p class="title is-5">Redis</p>
-                            {% if timestamp %}
-                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="level-right">
-                        {% if checks.redis.status == "ok" %}
-                        <span class="tag is-success">OK</span>
-                        {% else %}
-                        <span class="tag is-danger">ERROR</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <p class="is-size-7">
-                    {{ checks.redis.message }}
+    
+    {% if modular_stats %}
+    <div class="column is-full mt-4">
+        <h2 class="title is-4">Modular Apps Status</h2>
+    </div>
+    {% for app in modular_stats %}
+    <div class="column is-half">
+        <div class="card">
+            <header class="card-header">
+                <p class="card-header-title">
+                    {{ app.name }}
                 </p>
+            </header>
+            <div class="card-content">
+                <div class="content">
+                    <ul style="list-style-type: none; padding-left: 0;">
+                        {% for key, value in app.stats.items %}
+                        <li class="mb-2"><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-    <div class="column is-one-third">
-        <!-- RabbitMQ card -->
-        <div class="card mb-4 is-clickable" onclick="location.href='{% url 'monitor_rabbitmq' %}'">
-            <div class="card-content">
-                <div class="level mb-2">
-                    <div class="level-left">
-                        <div>
-                            <p class="title is-5">RabbitMQ / FORJ</p>
-                            {% if timestamp %}
-                            <p class="is-size-7 has-text-grey">Updated: {{ timestamp }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="level-right">
-                        {% if checks.rabbitmq.status == "ok" %}
-                        <span class="tag is-success">OK</span>
-                        {% elif checks.rabbitmq.status == "warning" %}
-                        <span class="tag is-warning">WARNING</span>
-                        {% else %}
-                        <span class="tag is-danger">ERROR</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <p class="is-size-7">
-                    {{ checks.rabbitmq.message }}
-                </p>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
+    {% endif %}
 </div>
-{% endblock %}
+{% endblock %}
