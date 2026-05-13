@@ -33,24 +33,27 @@ CELERY_BIN="$VENV_BIN/celery"
 case "$ROLE" in
   worker)
     echo "Starting Celery worker..." | tee -a "$LOGFILE"
+    echo "Pool type: $CELERY_POOL" | tee -a "$LOGFILE"
 
     if [ "${DJANGO_ENV:-development}" = "production" ]; then
       echo "Production worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
         -A forj.celery worker \
-        --pool=prefork \
-        -c 20 \
+        --pool=${CELERY_POOL} \
+        -c 25 \
         --hostname=worker@%h \
         --max-tasks-per-child=5 \
         --time-limit=14700 \
         --soft-time-limit=14400 \
+        --without-gossip --without-mingle --without-heartbeat \
         --loglevel=info
     else
       echo "Development worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
         -A forj.celery worker \
-        --pool=solo \
+        --pool=${CELERY_POOL} \
         --hostname=worker@%h \
+        --without-gossip --without-mingle --without-heartbeat \
         --loglevel=DEBUG
     fi
     ;;
