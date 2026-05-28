@@ -585,8 +585,8 @@ wheels = [
 
 [[package]]
 name = "imapsync-scriptgen"
-version = "1.0.0rc1"
-source = { git = "https://github.com/hallowslab/imapsync-scriptgen.git?rev=dev#f887d50af8535cbcdaa8aef11a39016ac0757ac2" }
+version = "1.0.1"
+source = { git = "https://github.com/hallowslab/imapsync-scriptgen.git?rev=main#60ff2a369d531249603a301f9a9f3eb641db1f7a" }
 
 [[package]]
 name = "kombu"
@@ -710,8 +710,8 @@ wheels = [
 
 [[package]]
 name = "nettools"
-version = "0.1.0"
-source = { git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev#d714ae23995ae1d9899b581f1a873b6b89a125c3" }
+version = "0.1.1"
+source = { git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev#9ad95048e9a456dca32dba82e6523a6f123c7efe" }
 dependencies = [
     { name = "django" },
     { name = "dnspython" },
@@ -851,8 +851,8 @@ wheels = [
 
 [[package]]
 name = "pymap"
-version = "0.5.0"
-source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#41b2f45adb2d1b5caa1c5844beb9326e6016f921" }
+version = "0.5.1"
+source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#49319fb379b57a8add404ead1967357dbcac55af" }
 dependencies = [
     { name = "django" },
     { name = "imapsync-scriptgen" },
