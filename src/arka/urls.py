@@ -18,6 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
+from django.conf import settings
 
 from . import views
 
@@ -52,8 +53,6 @@ urlpatterns = [
     path("profile/", views.profile, name="user_profile"),
 ]
 
-from django.conf import settings
-
 # Modular apps URLs
 if "pymap" in settings.INSTALLED_APPS:
     urlpatterns += [
@@ -63,4 +62,15 @@ if "aera" in settings.INSTALLED_APPS:
     urlpatterns += [
         path("AERA/", include(("aera.urls", "aera"), namespace="aera")),
     ]
-
+if "dbtool" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path("DBTOOL/", include(("dbtool.urls", "dbtool"), namespace="dbtool")),
+    ]
+if "nettools" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path("NETTOOLS/", include(("nettools.urls", "nettools"), namespace="nettools")),
+    ]
+if "mxr" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path("MXRemastered/", include(("mxr.urls", "mxr"), namespace="mxr")),
+    ]
