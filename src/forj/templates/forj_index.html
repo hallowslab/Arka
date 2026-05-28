@@ -3,7 +3,258 @@
 {% block title %}FÖᚱJ index{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">FÖᚱJ index</h1>
+<section class="section">
+  <div class="container">
+    <h1 class="title">FÖᚱJ Dashboard</h1>
+    <p class="subtitle">Celery task operations for modular apps</p>
 
-<p>Welcome to FÖᚱJ App!</p>
+    <div class="columns is-multiline">
+      <div class="column is-one-fifth">
+        <div class="box has-text-centered">
+          <p class="heading">Broker</p>
+          {% if broker.status == "ok" %}
+          <span class="tag is-success is-medium">OK</span>
+          {% else %}
+          <span class="tag is-danger is-medium">{{ broker.status|upper }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="column is-one-fifth">
+        <div class="box has-text-centered">
+          <p class="heading">Modules</p>
+          <p class="title is-4">{{ task_summary.modules }}</p>
+        </div>
+      </div>
+
+      <div class="column is-one-fifth">
+        <div class="box has-text-centered">
+          <p class="heading">Registered Tasks</p>
+          <p class="title is-4">{{ task_summary.registered_tasks }}</p>
+        </div>
+      </div>
+
+      <div class="column is-one-fifth">
+        <div class="box has-text-centered">
+          <p class="heading">Success Results</p>
+          <p class="title is-4 has-text-success">{{ task_summary.success }}</p>
+        </div>
+      </div>
+
+      <div class="column is-one-fifth">
+        <div class="box has-text-centered">
+          <p class="heading">Failure Results</p>
+          <p class="title is-4 has-text-danger">{{ task_summary.failure }}</p>
+        </div>
+      </div>
+
+      <div class="column is-full">
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">Celery Tasks by Module</p>
+          </header>
+          <div class="card-content">
+            {% if task_modules %}
+            <table class="table is-fullwidth is-hoverable is-striped">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Task</th>
+                  <th>Total</th>
+                  <th>Success</th>
+                  <th>Failure</th>
+                  <th>Latest</th>
+                  <th>Completed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for module in task_modules %}
+                {% for task in module.tasks %}
+                <tr>
+                  {% if forloop.first %}
+                  <td rowspan="{{ module.task_count }}">
+                    <strong>{{ module.name }}</strong>
+                    <div class="tags mt-2">
+                      <span class="tag is-info">{{ module.task_count }} tasks</span>
+                      <span class="tag is-success">{{ module.totals.success }} success</span>
+                      <span class="tag is-danger">{{ module.totals.failure }} failure</span>
+                    </div>
+                  </td>
+                  {% endif %}
+                  <td><code>{{ task.name }}</code></td>
+                  <td>{{ task.total }}</td>
+                  <td><span class="tag is-success">{{ task.success }}</span></td>
+                  <td><span class="tag is-danger">{{ task.failure }}</span></td>
+                  <td>
+                    {% if task.latest_status == "SUCCESS" %}
+                    <span class="tag is-success">SUCCESS</span>
+                    {% elif task.latest_status == "FAILURE" %}
+                    <span class="tag is-danger">FAILURE</span>
+                    {% elif task.latest_status %}
+                    <span class="tag is-warning">{{ task.latest_status }}</span>
+                    {% else %}
+                    <span class="tag is-light">No results</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if task.latest_done_at %}
+                    {{ task.latest_done_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                    <span class="has-text-grey">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p>No modular Celery tasks registered.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="column is-half">
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">Recent Failures</p>
+          </header>
+          <div class="card-content">
+            {% if recent_failures %}
+            <table class="table is-fullwidth is-narrow is-hoverable">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Completed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for failure in recent_failures %}
+                <tr>
+                  <td>
+                    <code>{{ failure.task_name }}</code>
+                    {% if failure.result %}
+                    <p class="is-size-7 mt-1">{{ failure.result|truncatechars:120 }}</p>
+                    {% elif failure.traceback %}
+                    <p class="is-size-7 mt-1">{{ failure.traceback|truncatechars:120 }}</p>
+                    {% endif %}
+                  </td>
+                  <td>{{ failure.date_done|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p>No recent task failures.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="column is-half">
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">RabbitMQ Topology</p>
+            <div class="card-header-icon">
+              {% if broker.rabbitmq_version %}
+              <span class="tag is-info">{{ broker.rabbitmq_version }}</span>
+              {% endif %}
+            </div>
+          </header>
+          <div class="card-content">
+            <nav class="level is-mobile mb-4">
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Connections</p>
+                  <p class="title is-5">{{ broker.summary.connections }}</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Channels</p>
+                  <p class="title is-5">{{ broker.summary.channels }}</p>
+                </div>
+              </div>
+              <div class="level-item has-text-centered">
+                <div>
+                  <p class="heading">Queues</p>
+                  <p class="title is-5">{{ broker.summary.queues }}</p>
+                </div>
+              </div>
+            </nav>
+
+            {% if broker.memory %}
+            <div class="box">
+              <div class="level is-mobile">
+                <div class="level-left">
+                  <div>
+                    <p class="heading">Node Memory</p>
+                    <p><code>{{ broker.memory.node }}</code></p>
+                  </div>
+                </div>
+                <div class="level-right">
+                  {% if broker.memory.strategy %}
+                  <span class="tag is-info">Strategy: {{ broker.memory.strategy }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="columns is-mobile has-text-centered">
+                <div class="column">
+                  <p class="heading">RSS</p>
+                  <p class="title is-6">{{ broker.memory.rss_mib }} MiB</p>
+                </div>
+                <div class="column">
+                  <p class="heading">Erlang</p>
+                  <p class="title is-6">{{ broker.memory.erlang_mib }} MiB</p>
+                </div>
+                <div class="column">
+                  <p class="heading">Allocated</p>
+                  <p class="title is-6">{{ broker.memory.allocated_mib }} MiB</p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <table class="table is-fullwidth is-narrow is-hoverable">
+              <tbody>
+                {% for node in broker.nodes %}
+                <tr>
+                  <td>
+                    <code>{{ node.name }}</code>
+                    <span class="tag is-light">{{ node.type }}</span>
+                  </td>
+                  <td class="has-text-right">
+                    {% if node.running %}
+                    <span class="tag is-success">Running</span>
+                    {% else %}
+                    <span class="tag is-danger">Stopped</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                {% for queue in broker.queues %}
+                <tr>
+                  <td><code>{{ queue.name }}</code></td>
+                  <td class="has-text-right">
+                    {% if queue.state == "running" %}
+                    <span class="tag is-success">Running</span>
+                    {% else %}
+                    <span class="tag is-warning">{{ queue.state }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="2" class="has-text-grey">No queues found</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
