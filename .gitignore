@@ -8,6 +8,8 @@ config.dev.json
 .secret
 # ARKA_LOGS
 ARKA_LOGS/
+# Notes
+notes/
 
 # Javascript
 node_modules/
