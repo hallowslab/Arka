@@ -1,11 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard{% endblock %}</title>
-    
+
     <!-- Bulma CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/bulma.css' %}">
@@ -13,33 +13,42 @@
     <link rel="stylesheet" href="{% static 'css/layout.css' %}">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
 
-
-    <style>
-        html, body { height: 100%; }
-    </style>
 </head>
+
 <body>
-<!-- THEME TOGGLE -->
-{% include "partials/theme_toggle.html" %}
+    <!-- THEME TOGGLE -->
+    {% include "partials/theme_toggle.html" %}
 
-<!-- SIDEBAR -->
-{% include "partials/sidebar.html" %}
+    <!-- SIDEBAR -->
+    {% include "partials/sidebar.html" %}
 
-<!-- MAIN CONTENT -->
-<div id="content" class="content-wrapper">
+    <!-- MAIN CONTENT -->
+    <div id="content" class="content-wrapper">
 
-    <!-- TOP BAR -->
-    {% include "partials/topbar.html" %}
+        <!-- TOP BAR -->
+        {% include "partials/topbar.html" %}
 
-    <!-- MAIN CONTENT AREA -->
-    <section class="section">
-        {% block content %}
-        {% endblock %}
-    </section>
+        <!-- Messages -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div
+                class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% elif message.tags == 'success' %}is-success{% else %}is-info{% endif %} is-light">
+                <button class="delete" onclick="this.parentElement.remove()"></button>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-</div>
+        <!-- MAIN CONTENT AREA -->
+        <section class="section">
+            {% block content %}
+            {% endblock %}
+        </section>
 
-</script>
+    </div>
 
 </body>
+
 </html>
