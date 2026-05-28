@@ -73,7 +73,9 @@ INSTALLED_APPS: List[str] = [
 
 # Modular apps inclusion
 raw_apps = os.environ.get("ENABLED_APPS", "")
-ENABLED_APPS_SET = {app.strip().upper() for app in raw_apps.split(",")} if raw_apps else set()
+ENABLED_APPS_SET = (
+    {app.strip().upper() for app in raw_apps.split(",")} if raw_apps else set()
+)
 
 ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR"}
 invalid_apps = ENABLED_APPS_SET - ALLOWED_APPS

@@ -5,6 +5,7 @@ from typing import Optional, Any, Dict
 from pathlib import Path
 from urllib.parse import quote
 
+
 def load_secret_key(environment: str, base_dir: Path) -> Optional[str]:
     key = None
     _secret = base_dir / ".secret"

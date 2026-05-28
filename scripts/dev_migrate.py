@@ -3,13 +3,8 @@ import sys
 import subprocess
 from pathlib import Path
 
-ENABLED_APPS = [
-    "AERA",
-    "PYMAP",
-    "DBTOOL",
-    "NETTOOLS",
-    "MXR"
-]
+ENABLED_APPS = ["AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR"]
+
 
 def load_env(env_path):
     """

@@ -3,6 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def main():
     """
     ARKA Version Exporter Helper
@@ -25,7 +26,7 @@ def main():
         {
             "name": "arka",
             "output": src_dir / "arka" / "_version.py",
-            "pyproject": root_dir / "pyproject.toml"
+            "pyproject": root_dir / "pyproject.toml",
         },
     ]
 
@@ -34,20 +35,28 @@ def main():
     if modular_apps_dir.exists():
         for app_dir in modular_apps_dir.iterdir():
             # Check for directories with pyproject.toml
-            if app_dir.is_dir() and not app_dir.name.startswith(".") and (app_dir / "pyproject.toml").exists():
+            if (
+                app_dir.is_dir()
+                and not app_dir.name.startswith(".")
+                and (app_dir / "pyproject.toml").exists()
+            ):
                 app_folder_name = app_dir.name
                 pkg_name = app_folder_name.lower()
-                
+
                 # Check for package directory inside (e.g. src/modular_apps/AERA/aera/)
                 pkg_dir = app_dir / pkg_name
                 if pkg_dir.exists():
-                    tasks.append({
-                        "name": pkg_name,
-                        "output": pkg_dir / "_version.py",
-                        "pyproject": app_dir / "pyproject.toml"
-                    })
+                    tasks.append(
+                        {
+                            "name": pkg_name,
+                            "output": pkg_dir / "_version.py",
+                            "pyproject": app_dir / "pyproject.toml",
+                        }
+                    )
                 else:
-                    print(f"[-] Warning: Package directory {pkg_dir} not found for {app_folder_name}. Skipping.")
+                    print(
+                        f"[-] Warning: Package directory {pkg_dir} not found for {app_folder_name}. Skipping."
+                    )
 
     print(f"[*] Found {len(tasks)} targets to version.")
 
@@ -56,24 +65,29 @@ def main():
         name = task["name"]
         output = task["output"]
         pyproject = task["pyproject"]
-        
+
         print(f"\n[>] Exporting version for '{name}'...")
         print(f"    Project: {pyproject.relative_to(root_dir)}")
         print(f"    Target:  {output.relative_to(root_dir)}")
-        
+
         try:
             # Running from root directory for consistent path resolution
             subprocess.run(
                 [
-                    "uv", "run", "poetry-version-exporter", 
-                    "-n", name, 
-                    "-p", str(pyproject), 
-                    "-o", str(output)
+                    "uv",
+                    "run",
+                    "poetry-version-exporter",
+                    "-n",
+                    name,
+                    "-p",
+                    str(pyproject),
+                    "-o",
+                    str(output),
                 ],
                 check=True,
                 cwd=str(root_dir),
                 capture_output=True,
-                text=True
+                text=True,
             )
             print(f"    [+] Success")
         except subprocess.CalledProcessError as e:
@@ -92,6 +106,7 @@ def main():
         sys.exit(1)
     else:
         print(f"\n[+] SUCCESS: All versions exported successfully.")
+
 
 if __name__ == "__main__":
     main()

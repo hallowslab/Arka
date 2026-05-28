@@ -19,4 +19,3 @@ def index(request):
         "broker": celery_status,
     }
     return render(request, "forj_index.html", context)
-

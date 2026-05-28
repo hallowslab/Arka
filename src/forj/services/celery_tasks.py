@@ -128,14 +128,16 @@ def get_celery_task_stats():
 
         stats = task_stats[task_name]
 
-        modules_map[module_name]["tasks"].append({
-            "name": task_name,
-            "total": stats["total"],
-            "success": stats["success"],
-            "failure": stats["failure"],
-            "latest_status": stats["latest_status"],
-            "latest_done_at": stats["latest_done_at"],
-        })
+        modules_map[module_name]["tasks"].append(
+            {
+                "name": task_name,
+                "total": stats["total"],
+                "success": stats["success"],
+                "failure": stats["failure"],
+                "latest_status": stats["latest_status"],
+                "latest_done_at": stats["latest_done_at"],
+            }
+        )
         modules_map[module_name]["task_count"] += 1
         modules_map[module_name]["totals"]["total"] += stats["total"]
         modules_map[module_name]["totals"]["success"] += stats["success"]

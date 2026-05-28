@@ -16,7 +16,7 @@ class RabbitMQClient:
     def __init__(self):
         self.base_url = settings.RABBITMQ_API_URL
         self.session = requests.Session()
-        
+
     def _get(self, path):
         try:
             response = self.session.get(f"{self.base_url}{path}", timeout=5)
@@ -28,7 +28,7 @@ class RabbitMQClient:
 
     def get_overview(self):
         return self._get("/overview")
-    
+
     def get_health(self):
         return self._get("/health/checks/ready-to-serve-clients")
 
@@ -73,14 +73,18 @@ class RabbitMQClient:
 
         if nodes:
             for node in nodes:
-                node_data.append({
-                    "name": node.get("name"),
-                    "type": node.get("type"),
-                    "running": node.get("running"),
-                    "being_drained": node.get("being_drained"),
-                })
+                node_data.append(
+                    {
+                        "name": node.get("name"),
+                        "type": node.get("type"),
+                        "running": node.get("running"),
+                        "being_drained": node.get("being_drained"),
+                    }
+                )
 
-            first_running_node = next((node for node in nodes if node.get("running")), nodes[0])
+            first_running_node = next(
+                (node for node in nodes if node.get("running")), nodes[0]
+            )
             memory_status = self.get_node_memory(first_running_node.get("name"))
             memory_totals = (memory_status or {}).get("memory", {}).get("total", {})
             memory = {
@@ -98,10 +102,12 @@ class RabbitMQClient:
         queue_data = []
         if queues:
             for q in queues:
-                queue_data.append({
-                    "name": q.get("name"),
-                    "state": q.get("state"),
-                })
+                queue_data.append(
+                    {
+                        "name": q.get("name"),
+                        "state": q.get("state"),
+                    }
+                )
 
         # Final response
         return {

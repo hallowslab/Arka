@@ -7,11 +7,15 @@ from django.shortcuts import render
 def dashboard(request):
     modular_stats = []
     for app_config in apps.get_app_configs():
-        if getattr(app_config, "is_modular", False) and hasattr(app_config, "get_dashboard_stats"):
-            modular_stats.append({
-                "name": app_config.verbose_name,
-                "stats": app_config.get_dashboard_stats()
-            })
+        if getattr(app_config, "is_modular", False) and hasattr(
+            app_config, "get_dashboard_stats"
+        ):
+            modular_stats.append(
+                {
+                    "name": app_config.verbose_name,
+                    "stats": app_config.get_dashboard_stats(),
+                }
+            )
 
     return render(request, "dashboard.html", {"modular_stats": modular_stats})
 
