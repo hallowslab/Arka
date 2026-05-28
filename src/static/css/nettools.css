@@ -1,0 +1,34 @@
+.nettools-function-card {
+    display: block;
+    height: 100%;
+    overflow: hidden;
+}
+
+.nettools-function-card__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.nettools-function-card__header .title {
+    flex: 1 1 8rem;
+    min-width: 0;
+    margin-bottom: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.nettools-function-card__header .tag {
+    flex-shrink: 0;
+    max-width: 100%;
+    white-space: normal;
+    height: auto;
+}
+
+.nettools-function-card__description {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
