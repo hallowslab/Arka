@@ -50,12 +50,24 @@
         const sidebar = document.getElementById("sidebar");
         const content = document.getElementById("content");
         const btn = document.getElementById("toggleBtn");
+        const storageKey = "arkaSidebarCollapsed";
 
-        if (sidebar && content && btn) {
-            btn.addEventListener("click", () => {
-                sidebar.classList.toggle("sidebar-collapsed");
-                content.classList.toggle("content-collapsed");
-            });
+        if (!sidebar || !content || !btn) {
+            return;
         }
+
+        function setCollapsed(collapsed) {
+            sidebar.classList.toggle("sidebar-collapsed", collapsed);
+            content.classList.toggle("content-collapsed", collapsed);
+            try {
+                localStorage.setItem(storageKey, collapsed ? "true" : "false");
+            } catch (e) {}
+        }
+
+        setCollapsed(localStorage.getItem(storageKey) === "true");
+
+        btn.addEventListener("click", () => {
+            setCollapsed(!sidebar.classList.contains("sidebar-collapsed"));
+        });
     });
 </script>
