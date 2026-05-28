@@ -80,6 +80,7 @@ services:
     ports:
       - "5001:80"
       - "5000:443"
+    restart: unless-stopped
     environment:
       STATIC_ROOT: ${STATIC_ROOT}
     volumes:
@@ -217,13 +218,13 @@ services:
     image: hallowtechlab/dovecot:debian-trixie
     container_name: dovecotsource
     ports:
-      - "143:143"
+      - "143"
     volumes:
       - ./docker/dovecot/users.csv:/users.csv:ro
     environment:
       POPULATE_INBOX: "true"
-      MIN_MESSAGES: "10"
-      MAX_MESSAGES: "30"
+      MIN_MESSAGES: "25"
+      MAX_MESSAGES: "50"
     profiles:
       - dovecot
 
@@ -231,13 +232,13 @@ services:
     image: hallowtechlab/dovecot:debian-trixie
     container_name: dovecotdest
     ports:
-      - "2143:143"
+      - "143"
     volumes:
       - ./docker/dovecot/users.csv:/users.csv:ro
     environment:
       POPULATE_INBOX: "false"
-      MIN_MESSAGES: "10"
-      MAX_MESSAGES: "30"
+      MIN_MESSAGES: "25"
+      MAX_MESSAGES: "50"
     profiles:
       - dovecot
 
