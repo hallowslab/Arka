@@ -23,7 +23,7 @@ def load_secret_key(environment: str, base_dir: Path) -> Optional[str]:
         )
 
 
-def build_broker_url(config: dict[str, str]) -> str:
+def build_broker_url(config: Dict[str, str]) -> str:
     """
     Builds a string for the broker url from a dictionary
     """
@@ -35,6 +35,22 @@ def build_broker_url(config: dict[str, str]) -> str:
         port = config.get("port", 5672)
         vhost = quote(config.get("vhost", "/"), safe="")
         return f"{scheme}://{username}:{password}@{host}:{port}/{vhost}"
+    except Exception as e:
+        raise e
+
+
+def build_rabbitmq_api_url(config: Dict[str, str]) -> str:
+    """
+    Builds a string for the RabbitMQ Management API url from a dictionary.
+    Assumes port 15672 for management API.
+    """
+    try:
+        username = quote(config["username"])
+        password = quote(config["password"])
+        host = config["host"]
+        # Management API default port is 15672
+        port = 15672
+        return f"http://{username}:{password}@{host}:{port}/api"
     except Exception as e:
         raise e
 
