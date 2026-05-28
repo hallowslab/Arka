@@ -18,12 +18,16 @@ dependencies = [
     "uvicorn-worker (>=0.4.0,<0.5.0)",
     "gunicorn (>=23.0.0,<24.0.0)",
     "gevent (>=25.9.1,<26.0.0)",
+    "requests>=2.32.3,<3.0.0",
 ]
 
 [project.optional-dependencies]
 aera = ["aera"]
+dbtool = ["dbtool"]
+mxr = ["mxr"]
+nettools = ["nettools"]
 pymap = ["pymap"]
-all = ["aera", "pymap"]
+all = ["aera", "dbtool", "mxr", "nettools", "pymap"]
 
 [dependency-groups]
 dev = [
@@ -37,17 +41,21 @@ dev = [
 
 [tool.uv.sources]
 aera = { git = "https://github.com/hallowslab/AERA.git", branch = "dev" }
+dbtool = { git = "https://github.com/hallowslab/DBTOOL.git", branch = "dev" }
+mxr = { git = "https://github.com/hallowslab/MXR.git", branch = "dev" }
+nettools = { git = "https://github.com/hallowslab/NETTOOLS.git", branch = "dev" }
 pymap = { git = "https://github.com/hallowslab/Pymap.git", branch = "modularize" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/arka", "src/forj"]
 
 [tool.taskipy.tasks]
-export-versions = "uv run poetry-version-exporter -n arka -o arka/_version.py && uv run poetry-version-exporter -n aera -o modular_apps/AERA/aera/_version.py && uv run poetry-version-exporter -n pymap -o modular_apps/Pymap/pymap/_version.py"
+export-versions = "python scripts/dev_version.py"
 lint = "task lint_black && task lint_mypy && task lint_ruff"
 lint_black = "black ."
 lint_ruff = "ruff check"
 lint_mypy = "mypy ."
+migrate = "python scripts/dev_migrate.py"
 
 [build-system]
 requires = ["hatchling"]
