@@ -16,12 +16,12 @@ from typing import Optional, List
 
 from .utils import (
     build_broker_url,
+    build_rabbitmq_api_url,
     check_logdir,
     load_secret_key,
     load_config_file,
 )
 from .logging import load_logging_defaults
-
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -72,11 +72,24 @@ INSTALLED_APPS: List[str] = [
 ]
 
 # Modular apps inclusion
-if os.environ.get("ENABLE_AERA", "false").lower() == "true":
-    INSTALLED_APPS.append("aera")
-if os.environ.get("ENABLE_PYMAP", "false").lower() == "true":
-    INSTALLED_APPS.append("pymap")
+raw_apps = os.environ.get("ENABLED_APPS", "")
+ENABLED_APPS_SET = {app.strip().upper() for app in raw_apps.split(",")} if raw_apps else set()
 
+ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR"}
+invalid_apps = ENABLED_APPS_SET - ALLOWED_APPS
+if invalid_apps:
+    raise ValueError(f"Unknown modular apps in ENABLED_APPS: {invalid_apps}")
+
+if "AERA" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("aera")
+if "PYMAP" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("pymap")
+if "DBTOOL" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("dbtool")
+if "NETTOOLS" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("nettools")
+if "MXR" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("mxr")
 
 MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",
@@ -198,9 +211,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://docs.celeryq.dev/en/stable/django/index.html
 
 CELERY_BROKER_URL = None
+RABBITMQ_API_URL = None
 CELERY_TIMEZONE = "Europe/Lisbon"
 CELERY_RESULT_BACKEND: str = "django-db"
 CELERY_RESULT_SERIALIZER = "json"
+CELERY_RESULT_EXTENDED = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TASK_ACKS_LATE = True
@@ -209,13 +224,18 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_TASK_SOFT_TIME_LIMIT = 14400  # 4 hours
 CELERY_TASK_TIME_LIMIT = 14700  # 4 hours 5 minutes
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 5
+
+# RabbitMQ 4.3+ Compatibility (Avoid transient non-exclusive queues)
+CELERY_WORKER_ENABLE_REMOTE_CONTROL = False
+CELERY_WORKER_SEND_TASK_EVENTS = False
+CELERY_TASK_SEND_SENT_EVENT = False
+CELERY_WORKER_GOSSIP = False
+CELERY_WORKER_MINGLE = False
 # CELERY_TASK_TRACK_STARTED: bool = True
 # CELERY_TASK_ALWAYS_EAGER: bool = True # Set True for local testing without a worker
 
 # Application log directory
 ARKA_LOGDIR: Optional[str] = None
-
-
 
 
 # Custom config
@@ -259,6 +279,8 @@ if isinstance(handlers, dict):
 else:
     LOGGING.update(load_logging_defaults(str(ARKA_LOGDIR)))
 try:
+    # Use the same config for both Broker and Management API
+    RABBITMQ_API_URL = build_rabbitmq_api_url(CELERY_BROKER_URL)
     CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_URL)
     if DJANGO_ENV == "production":
         check_logdir(ARKA_LOGDIR)
@@ -279,15 +301,15 @@ except Exception as e:
         pass
     else:
         raise e
-    
+
 if DJANGO_ENV == "migrations":
-        print(
-            "DEFAULTING DATABSE TO SQLITE!! THIS IS ONLY AN OVERRIDE TO RUN LOCALLY MAKEMIGRATIONS DJANGO MANAGEMENT COMMAND!!"
-        )
-        print(f"INSTALLED_APPS: {INSTALLED_APPS}")
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
+    print(
+        "DEFAULTING DATABASE TO SQLITE!! THIS IS ONLY AN OVERRIDE TO RUN LOCALLY MAKEMIGRATIONS DJANGO MANAGEMENT COMMAND!!"
+    )
+    print(f"INSTALLED_APPS: {INSTALLED_APPS}")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
+    }
