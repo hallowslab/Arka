@@ -114,6 +114,25 @@ strong {
     color: var(--card-text);
 }
 
+/* Pagination nav buttons should keep info color in both themes */
+.pagination-previous:not(.is-disabled),
+.pagination-next:not(.is-disabled) {
+    background-color: var(--bulma-info, #3e8ed0) !important;
+    border-color: var(--bulma-info, #3e8ed0) !important;
+    color: var(--bulma-info-invert, #ffffff) !important;
+}
+
+.pagination-previous:not(.is-disabled):hover,
+.pagination-next:not(.is-disabled):hover,
+.pagination-previous:not(.is-disabled):focus,
+.pagination-next:not(.is-disabled):focus,
+.pagination-previous:not(.is-disabled):active,
+.pagination-next:not(.is-disabled):active {
+    background-color: var(--bulma-info, #3e8ed0) !important;
+    border-color: var(--bulma-info, #3e8ed0) !important;
+    color: var(--bulma-info-invert, #ffffff) !important;
+}
+
 /* Break element */
 hr {
     border: none;
