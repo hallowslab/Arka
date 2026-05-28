@@ -1,6 +1,6 @@
 [project]
 name = "arka"
-version = "0.0.7"
+version = "0.1.0"
 description = "ARKA Modular Monolith"
 authors = [
     {name = "hallowslab", email = "hallows.tech.lab@gmail.com"}
