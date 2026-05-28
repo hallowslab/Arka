@@ -1,0 +1,9 @@
+{% if search_enabled %}
+{% include "components/list/search.html" %}
+{% endif %}
+
+{% include "components/list/table.html" %}
+
+{% if pagination %}
+{% include "components/list/pagination.html" %}
+{% endif %}

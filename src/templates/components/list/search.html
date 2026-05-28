@@ -1,0 +1,18 @@
+<div class="box mb-5">
+    <form method="get" action="">
+        <div class="field is-grouped is-grouped-multiline">
+            {% for field in search_fields %}
+            <div class="control">
+                <input class="input" type="text" name="{{ field.name }}" placeholder="{{ field.placeholder }}"
+                    value="{{ field.value }}">
+            </div>
+            {% endfor %}
+            <div class="control">
+                <button type="submit" class="button is-info">Search</button>
+            </div>
+            <div class="control">
+                <a href="{{ request.path }}" class="button is-light">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>

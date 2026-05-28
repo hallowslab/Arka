@@ -1,0 +1,23 @@
+{% if page_obj.has_other_pages %}
+<nav class="pagination is-centered" role="navigation" aria-label="pagination">
+    {% if pagination.has_previous %}
+    <a class="pagination-previous" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+    {% else %}
+    <a class="pagination-previous is-disabled">Previous</a>
+    {% endif %}
+
+    {% if pagination.has_next %}
+    <a class="pagination-next" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+    {% else %}
+    <a class="pagination-next is-disabled">Next</a>
+    {% endif %}
+
+    <ul class="pagination-list">
+        <li>
+            <span class="pagination-link has-background-info has-text-black">
+                Page {{ pagination.page }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+    </ul>
+</nav>
+{% endif %}
