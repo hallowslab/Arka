@@ -6,7 +6,7 @@
 
 - Development: `docker compose --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
 - Development(W-Monitor): `docker compose --profile monitor --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
-- Production: `docker compose up --build -d`
+- Production: `docker compose --env-file .\.env up --build -d`
 
 
 ### Side notes
