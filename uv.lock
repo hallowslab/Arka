@@ -24,7 +24,7 @@ wheels = [
 
 [[package]]
 name = "arka"
-version = "0.0.7"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "celery", extra = ["redis"] },
@@ -48,6 +48,7 @@ all = [
     { name = "aera" },
     { name = "dbtool" },
     { name = "mxr" },
+    { name = "nettools" },
     { name = "pymap" },
 ]
 dbtool = [
@@ -78,8 +79,8 @@ requires-dist = [
     { name = "aera", marker = "extra == 'aera'", git = "https://github.com/hallowslab/AERA.git?branch=dev" },
     { name = "aera", marker = "extra == 'all'", git = "https://github.com/hallowslab/AERA.git?branch=dev" },
     { name = "celery", extras = ["redis"], specifier = ">=5.5.3,<6.0.0" },
-    { name = "dbtool", marker = "extra == 'all'", git = "https://github.com/hallowslab/DBTOOL.git?branch=main" },
-    { name = "dbtool", marker = "extra == 'dbtool'", git = "https://github.com/hallowslab/DBTOOL.git?branch=main" },
+    { name = "dbtool", marker = "extra == 'all'", git = "https://github.com/hallowslab/DBTOOL.git?branch=dev" },
+    { name = "dbtool", marker = "extra == 'dbtool'", git = "https://github.com/hallowslab/DBTOOL.git?branch=dev" },
     { name = "django", specifier = ">=5.2.7,<6.0.0" },
     { name = "django-celery-beat", specifier = ">=2.8.1,<3.0.0" },
     { name = "django-celery-results", specifier = ">=2.6.0,<3.0.0" },
@@ -87,7 +88,8 @@ requires-dist = [
     { name = "gunicorn", specifier = ">=23.0.0,<24.0.0" },
     { name = "mxr", marker = "extra == 'all'", git = "https://github.com/hallowslab/MXR.git?branch=dev" },
     { name = "mxr", marker = "extra == 'mxr'", git = "https://github.com/hallowslab/MXR.git?branch=dev" },
-    { name = "nettools", marker = "extra == 'nettools'", git = "https://github.com/hallowslab/NETTOOLS.git?rev=dev" },
+    { name = "nettools", marker = "extra == 'all'", git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev" },
+    { name = "nettools", marker = "extra == 'nettools'", git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.2,<4.0.0" },
     { name = "pymap", marker = "extra == 'all'", git = "https://github.com/hallowslab/Pymap.git?branch=modularize" },
     { name = "pymap", marker = "extra == 'pymap'", git = "https://github.com/hallowslab/Pymap.git?branch=modularize" },
@@ -96,7 +98,7 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.40.0,<0.41.0" },
     { name = "uvicorn-worker", specifier = ">=0.4.0,<0.5.0" },
 ]
-provides-extras = ["aera", "dbtool", "mxr", "pymap", "all", "nettools"]
+provides-extras = ["aera", "dbtool", "mxr", "nettools", "pymap", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -333,8 +335,8 @@ wheels = [
 
 [[package]]
 name = "dbtool"
-version = "0.1.0"
-source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=main#37a6bc20df20d0fdc84d308fc020a9616223d59b" }
+version = "0.0.1"
+source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=dev#19856fe26f6dd005fbe034619c7fa9ab46e7ffdf" }
 dependencies = [
     { name = "django" },
 ]
@@ -709,7 +711,7 @@ wheels = [
 [[package]]
 name = "nettools"
 version = "0.1.0"
-source = { git = "https://github.com/hallowslab/NETTOOLS.git?rev=dev#a4a9790f63917bd7f7959f9dcdd8db2818a22cb2" }
+source = { git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev#d714ae23995ae1d9899b581f1a873b6b89a125c3" }
 dependencies = [
     { name = "django" },
     { name = "dnspython" },
@@ -849,8 +851,8 @@ wheels = [
 
 [[package]]
 name = "pymap"
-version = "0.4.0rc1"
-source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#03cfbb64c7c8e858dfc846246eae0c2bc4eaea7b" }
+version = "0.5.0"
+source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#41b2f45adb2d1b5caa1c5844beb9326e6016f921" }
 dependencies = [
     { name = "django" },
     { name = "imapsync-scriptgen" },
