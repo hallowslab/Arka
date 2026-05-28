@@ -7,19 +7,19 @@
         <ul class="menu-list">
             <li>
                 <a href="/admin" class="py-2">
-                    <span class="icon">📊</span>
+                    <span class="icon">📋</span>
                     <span class="menu-text">Administration</span>
                 </a>
             </li>
             <li>
                 <a href="/" class="py-2">
-                    <span class="icon">📊</span>
+                    <span class="icon">🖥️</span>
                     <span class="menu-text">Dashboard</span>
                 </a>
             </li>
             <li>
                 <a href="/FORJ" class="py-2">
-                    <span class="icon">📊</span>
+                    <span class="icon">⚒️</span>
                     <span class="menu-text">FÖᚱJ</span>
                 </a>
             </li>
@@ -27,7 +27,7 @@
             <li>
                 <a href="{{ app.root_url }}" class="py-2">
                     <span class="icon">{{ app.icon }}</span>
-                    <span class="menu-text">{{ app.name }}</span>
+                    <span class="menu-text">{{ app.verbose_name }}</span>
                 </a>
             </li>
             {% endfor %}
