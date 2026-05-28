@@ -1,17 +1,41 @@
+# New 
 
-### Docker:
+
+
+## Docker:
+
 - Development: `docker compose --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
-- Development(W-Monitor): `docker compose --profile monitor --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d --force-recreate`
+- Development(W-Monitor): `docker compose --profile monitor --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
 - Production: `docker compose up --build -d`
+
+
+### Side notes
+What it is: A "build-system + environment specification" that happens to use Docker
+Not: A container registry product pipeline
+So:
+- Compose = deployment manifest
+- Dockerfile = deterministic environment builder
+- build args = compile-time feature selection
+- images = reproducible runtime artifacts, not distributable products
+
+#### Reproducibility
+- same dependencies everywhere
+- same installed modules everywhere
+- no “it works on my machine”
+
+#### Deterministic feature composition
+- AERA exists or it does not exist
+- DBTOOL exists or it does not exist
+- no runtime ambiguity
 
 ### DEV:
 
 #### Makemigrations:
 
-- In order for makemigrations to work a few environment variables must be set():
-    `$env:PYTHONPATH=".;modular_apps/Pymap"; $env:DJANGO_ENV="development"; poetry run python manage.py makemigrations pymap`
-- After updating the branches on the modular apps the lock file needs to be synced:
-    `poetry lock`
+- In order for makemigrations to apply to modular_apps, edit the .env file and use the [Script](scripts\dev_migrate.py):
+    `uv run python .\scripts\dev_migrate.py`
+    * All enabled modular apps should be installed in the environment so they can be loaded:
+        `uv pip install -e .\src\modular_apps\AERA\ -e .\src\modular_apps\DBTOOL\ -e .\src\modular_apps\MXR\ -e .\src\modular_apps\NETTOOLS\ -e .\src\modular_apps\Pymap\`
 
 **Management commands should always be executed in the src directory**
 
