@@ -15,9 +15,6 @@ CELERY_BIN="$VENV_BIN/celery"
     echo "--- celery_init.sh started at $(date) as role: $ROLE ---"
     echo "[DEBUG] Current user: $(id)"
 
-    # Copy secrets
-    bash "$APP_DIR/scripts/copy_secrets.sh"
-
     # Wait for migrations to be ready
     echo "Waiting for migrations to be applied..."
     while ! "$PYTHON_BIN" src/manage.py migrate --check; do

@@ -19,9 +19,6 @@ sleep 13
     echo "[DEBUG] Current user: $(id)"
     echo "[DEBUG] APP_DIR: $APP_DIR"
     echo "[DEBUG] ARKA_LOGDIR: $ARKA_LOGDIR"
-    
-    # Copy secrets
-    bash "$APP_DIR/scripts/copy_secrets.sh"
 
     echo "[DEBUG] Permissions check:"
     ls -ld "$ARKA_LOGDIR" || echo "[WARN] Log dir not found"

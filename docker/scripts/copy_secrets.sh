@@ -6,13 +6,16 @@ echo "[INFO] Running copy_secrets.sh as $(whoami) (id: $(id))"
 SECRETS_DIR="/run/secrets"
 # The Django app's BASE_DIR is /app/src
 APP_DIR="/app/src"
+TARGET_USER="${TARGET_USER:-$(id -un)}"
+TARGET_GROUP="${TARGET_GROUP:-$(id -gn)}"
+TARGET_HOME="${TARGET_HOME:-$(getent passwd "$TARGET_USER" | cut -d: -f6)}"
 
 # Ensure we are in a safe directory
 cd "/app"
 
 declare -A FILE_MAP=(
-  [".pg_service.conf"]="$HOME/.pg_service.conf"
-  [".pgpass"]="$HOME/.pgpass"
+  [".pg_service.conf"]="$TARGET_HOME/.pg_service.conf"
+  [".pgpass"]="$TARGET_HOME/.pgpass"
   [".secret"]="$APP_DIR/.secret"
   ["config.json"]="$APP_DIR/config.json"
   ["config.dev.json"]="$APP_DIR/config.dev.json"
@@ -30,6 +33,7 @@ for src_file in "${!FILE_MAP[@]}"; do
         # 600 for .pgpass and pg_service, 644 for others
         if [[ "$src_file" == ".pgpass" || "$src_file" == ".pg_service.conf" ]]; then
             chmod 600 "$tmp_dest"
+            chown "$TARGET_USER:$TARGET_GROUP" "$tmp_dest"
         else
             chmod 644 "$tmp_dest"
         fi

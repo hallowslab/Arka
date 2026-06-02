@@ -8,7 +8,7 @@ umask 0002
 
 # Get the target user/uid from environment or default to arka
 TARGET_USER="${CONTAINER_USER:-arka}"
-GROUP_ID="${GID:-1002}"
+GROUP_ID="${GID:-10002}"
 
 echo "[ENTRYPOINT] Ensuring permissions for $ARKA_LOGDIR and $STATIC_ROOT..."
 
@@ -23,6 +23,14 @@ chmod 2775 "$ARKA_LOGDIR" "$STATIC_ROOT" || true
 
 # Ensure existing files are group-writable
 chmod -R g+w "$ARKA_LOGDIR" "$STATIC_ROOT" || true
+
+if [ -x /app/scripts/copy_secrets.sh ]; then
+    echo "[ENTRYPOINT] Copying secrets before dropping privileges"
+    export TARGET_USER
+    export TARGET_GROUP="$GROUP_ID"
+    export TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
+    bash /app/scripts/copy_secrets.sh
+fi
 
 echo "[ENTRYPOINT] Executing command as $TARGET_USER: $@"
 
