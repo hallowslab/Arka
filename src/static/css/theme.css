@@ -58,7 +58,9 @@ body.has-background-dark {
 .textarea,
 .select select,
 .label,
-.table {
+.table,
+.card-header,
+.card-header-title {
     background-color: var(--surface-bg);
     color: var(--surface-text);
 }

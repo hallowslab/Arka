@@ -1,6 +1,8 @@
 # Modular apps
 #**/modular_apps/
 
+notes/
+
 # sqlite
 *.sqlite3
 
@@ -85,6 +87,12 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# ruff
+.ruff_cache/
+
+# mypy
+.mypy_cache/
 
 # Virtual environment
 .env
