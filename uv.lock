@@ -128,7 +128,7 @@ wheels = [
 [[package]]
 name = "bifrost"
 version = "0.0.1"
-source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#d6a7e9d6966d8a48f87d5f19ae9f0b654baa9081" }
+source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#9f62583d0af158f309436a43d0b9c816f928ecdd" }
 dependencies = [
     { name = "django" },
 ]
