@@ -6,7 +6,7 @@ FROM python:3.13-slim AS base
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
-ARG GID=1002
+ARG GID=10002
 ARG GROUPNAME=arka
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -38,8 +38,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 # Create users
 RUN addgroup --gid $GID $GROUPNAME && \
-    adduser --disabled-password --gecos '' --uid 1001 --gid $GID arka && \
-    adduser --disabled-password --gecos '' --uid 1002 --gid $GID forj
+    adduser --disabled-password --gecos '' --uid 10001 --gid $GID arka && \
+    adduser --disabled-password --gecos '' --uid 10003 --gid $GID forj
 
 # Copy imapsync from binary image
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
