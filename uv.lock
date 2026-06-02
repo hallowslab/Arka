@@ -5,7 +5,7 @@ requires-python = ">=3.13, <4.0"
 [[package]]
 name = "aera"
 version = "0.2.0"
-source = { git = "https://github.com/hallowslab/AERA.git?branch=dev#1d04a99f0b9bdec91061e684e94d7116a2a4392f" }
+source = { git = "https://github.com/hallowslab/AERA.git?branch=dev#a0bccd01460194ce4422b3040666c838b4dd43d0" }
 dependencies = [
     { name = "django" },
 ]
@@ -128,7 +128,7 @@ wheels = [
 [[package]]
 name = "bifrost"
 version = "0.0.1"
-source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#f48b13a40810c24b562a487f6c511cff5f35191e" }
+source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#d6a7e9d6966d8a48f87d5f19ae9f0b654baa9081" }
 dependencies = [
     { name = "django" },
 ]
@@ -350,7 +350,7 @@ wheels = [
 [[package]]
 name = "dbtool"
 version = "0.0.1"
-source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=dev#19856fe26f6dd005fbe034619c7fa9ab46e7ffdf" }
+source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=dev#8a5d3375748c54eeb3d4f03e09a8455e0b70da48" }
 dependencies = [
     { name = "django" },
 ]
