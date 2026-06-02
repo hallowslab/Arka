@@ -3,7 +3,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-ENABLED_APPS = ["AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR"]
+ENABLED_APPS = ["AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR", "BIFROST"]
 
 
 def load_env(env_path):
@@ -31,7 +31,7 @@ def main():
     script_dir = Path(__file__).resolve().parent
     root_dir = script_dir.parent
     src_dir = root_dir / "src"
-    env_file = root_dir / ".env"
+    env_file = root_dir / "dev.env"
 
     print(f"[*] ARKA Migration Helper Script")
     print(f"[*] Root directory: {root_dir}")

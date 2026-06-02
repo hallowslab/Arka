@@ -77,7 +77,7 @@ ENABLED_APPS_SET = (
     {app.strip().upper() for app in raw_apps.split(",")} if raw_apps else set()
 )
 
-ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR"}
+ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR", "BIFROST"}
 invalid_apps = ENABLED_APPS_SET - ALLOWED_APPS
 if invalid_apps:
     raise ValueError(f"Unknown modular apps in ENABLED_APPS: {invalid_apps}")
@@ -92,6 +92,8 @@ if "NETTOOLS" in ENABLED_APPS_SET:
     INSTALLED_APPS.append("nettools")
 if "MXR" in ENABLED_APPS_SET:
     INSTALLED_APPS.append("mxr")
+if "BIFROST" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("bifrost")
 
 MIDDLEWARE: List[str] = [
     "django.middleware.security.SecurityMiddleware",

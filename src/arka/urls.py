@@ -74,3 +74,7 @@ if "mxr" in settings.INSTALLED_APPS:
     urlpatterns += [
         path("MXRemastered/", include(("mxr.urls", "mxr"), namespace="mxr")),
     ]
+if "bifrost" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path("BIFROST/", include(("bifrost.urls", "bifrost"), namespace="bifrost")),
+    ]

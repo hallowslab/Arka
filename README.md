@@ -35,7 +35,7 @@ So:
 - In order for makemigrations to apply to modular_apps, edit the .env file and use the [Script](scripts\dev_migrate.py):
     `uv run python .\scripts\dev_migrate.py`
     * All enabled modular apps should be installed in the environment so they can be loaded:
-        `uv pip install -e .\src\modular_apps\AERA\ -e .\src\modular_apps\DBTOOL\ -e .\src\modular_apps\MXR\ -e .\src\modular_apps\NETTOOLS\ -e .\src\modular_apps\Pymap\`
+        `uv pip install -e .\src\modular_apps\AERA\ -e .\src\modular_apps\BIFROST\ -e .\src\modular_apps\DBTOOL\ -e .\src\modular_apps\MXR\ -e .\src\modular_apps\NETTOOLS\ -e .\src\modular_apps\Pymap\`
 
 **Management commands should always be executed in the src directory**
 

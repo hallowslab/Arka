@@ -80,7 +80,8 @@ RUN uv pip install -e src/modular_apps/AERA \
     -e src/modular_apps/Pymap \
     -e src/modular_apps/DBTOOL \
     -e src/modular_apps/NETTOOLS \
-    -e src/modular_apps/MXR
+    -e src/modular_apps/MXR \
+    -e src/modular_apps/BIFROST
 
 COPY docker/scripts/ /app/scripts/
 RUN chmod +x /app/scripts/*.sh && chown -R arka:$GROUPNAME /app
@@ -106,6 +107,7 @@ RUN if [ "$MODULE_SOURCE" = "local" ]; then \
     if echo "$ENABLED_APPS" | grep -iq "DBTOOL"; then uv pip install /tmp/modular_apps/DBTOOL; fi; \
     if echo "$ENABLED_APPS" | grep -iq "NETTOOLS"; then uv pip install /tmp/modular_apps/NETTOOLS; fi; \
     if echo "$ENABLED_APPS" | grep -iq "MXR"; then uv pip install /tmp/modular_apps/MXR; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "BIFROST"; then uv pip install /tmp/modular_apps/BIFROST; fi; \
     else \
     EXTRAS=""; \
     if echo "$ENABLED_APPS" | grep -iq "AERA"; then EXTRAS="$EXTRAS --extra aera"; fi; \
@@ -113,6 +115,7 @@ RUN if [ "$MODULE_SOURCE" = "local" ]; then \
     if echo "$ENABLED_APPS" | grep -iq "DBTOOL"; then EXTRAS="$EXTRAS --extra dbtool"; fi; \
     if echo "$ENABLED_APPS" | grep -iq "NETTOOLS"; then EXTRAS="$EXTRAS --extra nettools"; fi; \
     if echo "$ENABLED_APPS" | grep -iq "MXR"; then EXTRAS="$EXTRAS --extra mxr"; fi; \
+    if echo "$ENABLED_APPS" | grep -iq "BIFROST"; then EXTRAS="$EXTRAS --extra bifrost"; fi; \
     uv sync --frozen --no-dev --no-editable $EXTRAS; \
     fi; \
     rm -rf /tmp/modular_apps
