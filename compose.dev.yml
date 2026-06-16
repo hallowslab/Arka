@@ -17,6 +17,7 @@ services:
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - STATIC_ROOT=/var/www/static
       - ENABLED_APPS=${ENABLED_APPS:-""}
+      - CONTAINER_USER=root
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root_dev:/var/www/static
@@ -43,6 +44,7 @@ services:
       - DJANGO_ENV=development
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - CONTAINER_USER=root
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -66,6 +68,7 @@ services:
       - DJANGO_ENV=development
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - CONTAINER_USER=root
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
