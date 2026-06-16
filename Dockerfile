@@ -154,4 +154,3 @@ CMD ["/app/scripts/django_init.sh"]
 # Stage 6: Production Forj (Worker)
 FROM production-base AS final-production-worker
 CMD ["/app/scripts/celery_init.sh", "worker"]
-
