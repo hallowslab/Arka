@@ -222,8 +222,8 @@ services:
       - ./docker/dovecot/users.csv:/users.csv:ro
     environment:
       POPULATE_INBOX: "true"
-      MIN_MESSAGES: "25"
-      MAX_MESSAGES: "50"
+      MIN_MESSAGES: "2500"
+      MAX_MESSAGES: "3500"
     profiles:
       - dovecot
 
@@ -236,8 +236,8 @@ services:
       - ./docker/dovecot/users.csv:/users.csv:ro
     environment:
       POPULATE_INBOX: "false"
-      MIN_MESSAGES: "25"
-      MAX_MESSAGES: "50"
+      MIN_MESSAGES: "2500"
+      MAX_MESSAGES: "3500"
     profiles:
       - dovecot
 

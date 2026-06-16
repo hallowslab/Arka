@@ -866,7 +866,7 @@ wheels = [
 [[package]]
 name = "pymap"
 version = "0.5.1"
-source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#49319fb379b57a8add404ead1967357dbcac55af" }
+source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#1c4c98898184ca515def00ec3825a8c23b6b5855" }
 dependencies = [
     { name = "django" },
     { name = "imapsync-scriptgen" },
