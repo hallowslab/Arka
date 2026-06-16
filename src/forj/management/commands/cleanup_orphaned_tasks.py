@@ -1,5 +1,3 @@
-import os
-import signal
 import psutil
 import socket
 from django.core.management.base import BaseCommand
@@ -9,6 +7,21 @@ from pymap.models import MigrationTask
 
 class Command(BaseCommand):
     help = "Clean up orphaned imapsync processes and update database status."
+
+    def _is_imapsync_process(proc: psutil.Process) -> bool:
+        try:
+            cmdline = proc.cmdline()
+            if not cmdline:
+                return False
+
+            # Common cases:
+            # perl imapsync
+            # imapsync --args
+            # /usr/bin/imapsync ...
+            return any("imapsync" in part.lower() for part in cmdline)
+
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return False
 
     def handle(self, *args, **options):
         current_host = socket.gethostname()
@@ -35,9 +48,8 @@ class Command(BaseCommand):
                 # Check if process exists
                 process = psutil.Process(task.pid)
 
-                # Verify it's actually an imapsync or perl process (optional but safer)
-                # For now, we trust the PID + hostname combination
-                if process.is_running():
+                # Verify it's actually an imapsync or perl process
+                if self._is_imapsync_process(process):
                     self.stdout.write(
                         f"Task {task.id} (PID {task.pid}) is still running."
                     )
