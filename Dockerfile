@@ -125,7 +125,7 @@ FROM base AS production-base
 
 ARG ENABLED_APPS=""
 ARG DJANGO_ENV=production
-ARG CELERY_POOL=gevent
+ARG CELERY_POOL=thread-pool
 
 ENV DJANGO_ENV=${DJANGO_ENV} \
     CELERY_POOL=${CELERY_POOL} \

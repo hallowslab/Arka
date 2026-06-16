@@ -133,7 +133,7 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-gevent}
+        CELERY_POOL: ${CELERY_POOL:-thread-pool}
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
       - CELERY_POOL=${CELERY_POOL:-gevent}
