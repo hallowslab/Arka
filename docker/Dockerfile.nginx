@@ -1,6 +1,6 @@
 FROM nginx:1.29.8-trixie
 
-ARG GID=1002
+ARG GID=10002
 ARG GROUPNAME=arka
 
 # Install openssl
