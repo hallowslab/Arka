@@ -133,10 +133,10 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-thread-pool}
+        CELERY_POOL: ${CELERY_POOL:-prefork}
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
-      - CELERY_POOL=${CELERY_POOL:-gevent}
+      - CELERY_POOL=${CELERY_POOL:-prefork}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=forj
