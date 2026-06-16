@@ -2,7 +2,7 @@ services:
   # ---------- Cache ----------
   redis:
     image: "docker.io/library/redis:latest"
-    ports:
+    expose:
       - "6379"
     restart: unless-stopped
   # ---------- Broker ----------
@@ -13,10 +13,9 @@ services:
     image: rabbitmq:arka-prod
     container_name: rabbitmq-arka
     hostname: rabbitmq
-    ports:
+    expose:
       - "5672"
       - "15692"
-      - "15672:15672"
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
@@ -33,7 +32,7 @@ services:
   # ---------- DB ----------
   postgres:
     image: "docker.io/library/postgres:latest"
-    ports:
+    expose:
       - "5432"
     restart: unless-stopped
     hostname: postgres-arka
@@ -64,7 +63,7 @@ services:
       - PGBOUNCER_POOL_MODE=transaction # CRITICAL for Django
       - PGBOUNCER_MAX_CLIENT_CONN=100
       - PGBOUNCER_DEFAULT_POOL_SIZE=25
-    ports:
+    expose:
       - "6432"
     restart: unless-stopped
     depends_on:
@@ -75,7 +74,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.nginx
       args:
-        GID: 1002
+        GID: 10002
         GROUPNAME: ${CONTAINER_GROUP:-arka}
     ports:
       - "5001:80"
@@ -108,8 +107,8 @@ services:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=arka
       - PYTHONPATH=/app/src
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -217,7 +216,7 @@ services:
   dovecotsource:
     image: hallowtechlab/dovecot:debian-trixie
     container_name: dovecotsource
-    ports:
+    expose:
       - "143"
     volumes:
       - ./docker/dovecot/users.csv:/users.csv:ro
@@ -231,7 +230,7 @@ services:
   dovecotdest:
     image: hallowtechlab/dovecot:debian-trixie
     container_name: dovecotdest
-    ports:
+    expose:
       - "143"
     volumes:
       - ./docker/dovecot/users.csv:/users.csv:ro
