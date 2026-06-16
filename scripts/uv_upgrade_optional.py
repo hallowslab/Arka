@@ -58,7 +58,7 @@ def main() -> int:
     args = parser.parse_args()
 
     root_dir = _script_dir.parent
-    env_file = root_dir / ".env"
+    env_file = root_dir / "dev.env"
 
     print("[*] ARKA optional dependency upgrade")
     print(f"[*] Root directory: {root_dir}")
