@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: docker/rabbitmq/Dockerfile
     image: rabbitmq:arka-prod
-    container_name: rabbitmq-arka
+    container_name: arka-rabbitmq
     hostname: rabbitmq
     expose:
       - "5672"
@@ -41,7 +41,7 @@ services:
     expose:
       - "5432"
     restart: unless-stopped
-    hostname: postgres-arka
+    hostname: arka-postgres
     environment:
       PGDATA: /var/lib/postgresql/data
       POSTGRES_DB: ${POSTGRES_DB:-arka}
@@ -59,7 +59,7 @@ services:
   # ---------- DB Pooling -----------
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
-    container_name: pgbouncer-arka
+    container_name: arka-pgbouncer
     environment:
       - DATABASES_HOST=${POSTGRES_HOST:-postgres}
       - DATABASES_PORT=${POSTGRES_PORT:-5432}
