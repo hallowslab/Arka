@@ -96,6 +96,8 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
+    env_file:
+      - mimir.env
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-arka}
       - POSTGRES_USER=${POSTGRES_USER:-arka}
@@ -134,6 +136,8 @@ services:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
         CELERY_POOL: ${CELERY_POOL:-prefork}
+    env_file:
+      - mimir.env
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
       - CELERY_POOL=${CELERY_POOL:-prefork}
@@ -153,6 +157,21 @@ services:
       mode: replicated
       replicas: ${WORKER_REPLICAS:-1}
     command: /app/scripts/celery_init.sh worker
+  # ---------- Forj-imapsync (dedicated imapsync queue) ----------
+  forj-imapsync:
+    <<: *forj_base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final-production-imapsync-worker
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-prefork}
+    deploy:
+      mode: replicated
+      replicas: ${IMAPSYNC_WORKER_REPLICAS:-1}
+    command: /app/scripts/celery_init.sh worker imapsync
   # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base
