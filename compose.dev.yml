@@ -24,6 +24,7 @@ services:
       - ./src:/app/src
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
+      - ./data/mimir:/app/data/mimir
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -79,6 +80,31 @@ services:
         target: /run/secrets
         read_only: true
     command: /app/scripts/celery_init.sh worker imapsync
+
+  forj-mimir:
+    build:
+      context: .
+      target: development
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-solo}
+    environment:
+      - DJANGO_ENV=development
+      - CELERY_POOL=${CELERY_POOL:-solo}
+      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - CONTAINER_USER=root
+    volumes:
+      - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - ./data/mimir:/app/data/mimir
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    command: /app/scripts/celery_init.sh worker mimir
 
   forj-scheduler:
     build:

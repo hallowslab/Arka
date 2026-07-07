@@ -126,6 +126,7 @@ services:
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root:$STATIC_ROOT
+      - ./data/mimir:/app/data/mimir
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -155,6 +156,7 @@ services:
       - PYTHONPATH=/app/src
     depends_on:
       - rabbitmq
+      - postgres
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - type: bind
@@ -163,7 +165,7 @@ services:
         read_only: true
     deploy:
       mode: replicated
-      replicas: ${WORKER_REPLICAS:-1}
+      replicas: ${FORJ_WORKER_REPLICAS:-1}
     command: /app/scripts/celery_init.sh worker
   # ---------- Forj-imapsync (dedicated imapsync queue) ----------
   forj-imapsync:
@@ -180,6 +182,27 @@ services:
       mode: replicated
       replicas: ${IMAPSYNC_WORKER_REPLICAS:-1}
     command: /app/scripts/celery_init.sh worker imapsync
+  # ---------- MIMIR Worker (dedicated mimir queue) ----------
+  forj-mimir:
+    <<: *forj_base
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final-production-mimir-worker
+      args:
+        ENABLED_APPS: ${ENABLED_APPS:-""}
+        MODULE_SOURCE: ${MODULE_SOURCE:-git}
+        CELERY_POOL: ${CELERY_POOL:-prefork}
+    deploy:
+      mode: global
+    volumes:
+      - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
+      - ./data/mimir:/app/data/mimir
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+    command: /app/scripts/celery_init.sh worker mimir
   # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base

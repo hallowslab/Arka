@@ -65,8 +65,11 @@ ARG DJANGO_ENV=development
 ENV DJANGO_ENV=${DJANGO_ENV} \
     CELERY_POOL=${CELERY_POOL} \
     ENABLED_APPS=${ENABLED_APPS}
-# imapsync available in dev for testing
+# imapsync & goaccess available in dev for testing
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    goaccess \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY pyproject.toml uv.lock* README.md ./
 # We don't copy modular apps yet to ensure uv sync can fetch git versions first
 RUN uv sync --frozen && \
@@ -160,4 +163,11 @@ CMD ["/app/scripts/celery_init.sh", "worker"]
 # Stage 7: Production Imapsync Worker (dedicated imapsync queue)
 FROM production-base AS final-production-imapsync-worker
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
+CMD ["/app/scripts/celery_init.sh", "worker"]
+
+# Stage 8: Production MIMIR Worker (dedicated mimir queue)
+FROM production-base AS final-production-mimir-worker
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    goaccess \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 CMD ["/app/scripts/celery_init.sh", "worker"]

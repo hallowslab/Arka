@@ -15,6 +15,8 @@ notes/
 *.env
 # But don't ignore template files
 !*.env.template
+# app data
+data/
 
 # Javascript
 node_modules/
