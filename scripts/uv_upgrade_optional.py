@@ -22,7 +22,7 @@ from pathlib import Path
 _script_dir = Path(__file__).resolve().parent
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
-from dev_migrate import ENABLED_APPS, load_env  # noqa: E402
+from dev_migrate import load_env  # noqa: E402
 
 
 def resolve_enabled_apps() -> list[str]:
@@ -30,7 +30,7 @@ def resolve_enabled_apps() -> list[str]:
     raw = os.environ.get("ENABLED_APPS", "").strip()
     if raw:
         return [name.strip().upper() for name in raw.split(",") if name.strip()]
-    return list(ENABLED_APPS)
+    return list(os.environ.get("ENABLED_APPS", "").strip().upper().split(","))
 
 
 def app_names_to_packages(app_names: list[str]) -> list[str]:
