@@ -231,6 +231,12 @@ CELERY_TASK_SOFT_TIME_LIMIT = 14400  # 4 hours
 CELERY_TASK_TIME_LIMIT = 14700  # 4 hours 5 minutes
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 5
 
+# Task routing — each app uses a dedicated queue for separation
+CELERY_TASK_ROUTES: dict = {
+    "pymap.tasks.run_imap_sync": {"queue": "imapsync"},
+    "mimir.tasks.analyze_log_file": {"queue": "mimir"},
+}
+
 # RabbitMQ 4.3+ Compatibility (Avoid transient non-exclusive queues)
 CELERY_WORKER_ENABLE_REMOTE_CONTROL = False
 CELERY_WORKER_SEND_TASK_EVENTS = False
