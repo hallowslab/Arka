@@ -3,9 +3,6 @@ import sys
 import subprocess
 from pathlib import Path
 
-ENABLED_APPS = ["AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR", "BIFROST"]
-
-
 def load_env(env_path):
     """
     Manually load environment variables from a .env file.
@@ -49,14 +46,13 @@ def main():
 
     # 2. Set mandatory environment variables for local migrations
     os.environ["DJANGO_ENV"] = "migrations"
-    os.environ["ENABLED_APPS"] = ",".join(ENABLED_APPS)
     local_log_dir = root_dir / "ARKA_LOGS"
     local_log_dir.mkdir(exist_ok=True)
     os.environ["ARKA_LOGDIR"] = str(local_log_dir)
 
     print(f"[*] DJANGO_ENV set to 'migrations' (using SQLite)")
     print(f"[*] ARKA_LOGDIR set to {local_log_dir}")
-    print(f"[*] Modular apps enabled: {', '.join(ENABLED_APPS)}")
+    print(f"[*] Modular apps enabled: {os.environ.get('ENABLED_APPS', '')}")
 
     if not src_dir.exists():
         print(f"[!] Error: 'src' directory not found at {src_dir}")
