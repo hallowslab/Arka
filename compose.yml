@@ -2,9 +2,15 @@ services:
   # ---------- Cache ----------
   redis:
     image: "docker.io/library/redis:latest"
+    command: redis-server /run/secrets/redis.conf
     expose:
       - "6379"
     restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
   # ---------- Broker ----------
   rabbitmq:
     build:
@@ -98,6 +104,7 @@ services:
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
     env_file:
       - mimir.env
+      - pymap.env
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-arka}
       - POSTGRES_USER=${POSTGRES_USER:-arka}
@@ -138,6 +145,7 @@ services:
         CELERY_POOL: ${CELERY_POOL:-prefork}
     env_file:
       - mimir.env
+      - pymap.env
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
       - CELERY_POOL=${CELERY_POOL:-prefork}

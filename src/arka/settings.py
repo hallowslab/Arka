@@ -249,6 +249,9 @@ CELERY_WORKER_MINGLE = False
 # Application log directory
 ARKA_LOGDIR: Optional[str] = None
 
+# Pymap
+PYMAP_CACHE_TIMEOUT: int = int(os.environ.get("PYMAP_CACHE_TIMEOUT", "3600"))
+
 
 # Custom config
 CUSTOM_CONFIG = load_config_file(DJANGO_ENV, BASE_DIR)
@@ -267,6 +270,18 @@ CELERY_RESULT_BACKEND = CUSTOM_CONFIG.get(
 # 2. Env Overrides (Priority)
 ARKA_LOGDIR = os.environ.get("ARKA_LOGDIR")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_RESULT_BACKEND)
+
+# 2b. Add isolated pymap_secrets cache alias on DB 1 (fallback if not in config.json)
+if "pymap_secrets" not in CACHES:
+    _def_loc = CACHES.get("default", {}).get("LOCATION", "redis://127.0.0.1:6379/0")
+    if "/" in _def_loc.rsplit(":", 1)[-1]:
+        _pymap_loc = _def_loc.rsplit("/", 1)[0] + "/1"
+    else:
+        _pymap_loc = _def_loc + "/1"
+    CACHES["pymap_secrets"] = {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": _pymap_loc,
+    }
 
 # 3. Finalize
 if ARKA_LOGDIR is None:

@@ -6,6 +6,7 @@ config.dev.json
 .pgpass
 .pg_service.conf
 .secret
+redis.conf
 # ARKA_LOGS
 ARKA_LOGS/
 # Notes
