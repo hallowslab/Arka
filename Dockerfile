@@ -41,9 +41,6 @@ RUN addgroup --gid $GID $GROUPNAME && \
     adduser --disabled-password --gecos '' --uid 10001 --gid $GID arka && \
     adduser --disabled-password --gecos '' --uid 10003 --gid $GID forj
 
-# Copy imapsync from binary image
-COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
-
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv/bin/uv
 
@@ -68,6 +65,8 @@ ARG DJANGO_ENV=development
 ENV DJANGO_ENV=${DJANGO_ENV} \
     CELERY_POOL=${CELERY_POOL} \
     ENABLED_APPS=${ENABLED_APPS}
+# imapsync available in dev for testing
+COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
 COPY pyproject.toml uv.lock* README.md ./
 # We don't copy modular apps yet to ensure uv sync can fetch git versions first
 RUN uv sync --frozen && \
@@ -154,6 +153,11 @@ FROM production-base AS final-production
 EXPOSE 8000
 CMD ["/app/scripts/django_init.sh"]
 
-# Stage 6: Production Forj (Worker)
+# Stage 6: Production Forj (Worker — default queue only)
 FROM production-base AS final-production-worker
+CMD ["/app/scripts/celery_init.sh", "worker"]
+
+# Stage 7: Production Imapsync Worker (dedicated imapsync queue)
+FROM production-base AS final-production-imapsync-worker
+COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
 CMD ["/app/scripts/celery_init.sh", "worker"]
