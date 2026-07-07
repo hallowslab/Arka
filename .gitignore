@@ -10,6 +10,10 @@ config.dev.json
 ARKA_LOGS/
 # Notes
 notes/
+# Ignore all .env files
+*.env
+# But don't ignore template files
+!*.env.template
 
 # Javascript
 node_modules/
@@ -164,8 +168,6 @@ activemq-data/
 *.sage.py
 
 # Environments
-.env
-dev.env
 .envrc
 .venv
 env/
