@@ -25,10 +25,11 @@ dependencies = [
 aera = ["aera"]
 bifrost = ["bifrost"]
 dbtool = ["dbtool"]
+mimir = ["mimir"]
 mxr = ["mxr"]
 nettools = ["nettools"]
 pymap = ["pymap"]
-all = ["aera", "bifrost", "dbtool", "mxr", "nettools", "pymap"]
+all = ["aera", "bifrost", "dbtool", "mimir", "mxr", "nettools", "pymap"]
 
 [dependency-groups]
 dev = [
@@ -44,6 +45,7 @@ dev = [
 aera = { git = "https://github.com/hallowslab/AERA.git", branch = "dev" }
 bifrost = { git = "https://github.com/hallowslab/BIFROST.git", branch = "dev" }
 dbtool = { git = "https://github.com/hallowslab/DBTOOL.git", branch = "dev" }
+mimir = { git = "https://github.com/hallowslab/MIMIR.git", branch = "dev" }
 mxr = { git = "https://github.com/hallowslab/MXR.git", branch = "dev" }
 nettools = { git = "https://github.com/hallowslab/NETTOOLS.git", branch = "dev" }
 pymap = { git = "https://github.com/hallowslab/Pymap.git", branch = "modularize" }

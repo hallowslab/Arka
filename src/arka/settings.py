@@ -77,7 +77,7 @@ ENABLED_APPS_SET = (
     {app.strip().upper() for app in raw_apps.split(",")} if raw_apps else set()
 )
 
-ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MXR", "BIFROST"}
+ALLOWED_APPS = {"AERA", "PYMAP", "DBTOOL", "NETTOOLS", "MIMIR", "MXR", "BIFROST"}
 invalid_apps = ENABLED_APPS_SET - ALLOWED_APPS
 if invalid_apps:
     raise ValueError(f"Unknown modular apps in ENABLED_APPS: {invalid_apps}")
@@ -90,6 +90,8 @@ if "DBTOOL" in ENABLED_APPS_SET:
     INSTALLED_APPS.append("dbtool")
 if "NETTOOLS" in ENABLED_APPS_SET:
     INSTALLED_APPS.append("nettools")
+if "MIMIR" in ENABLED_APPS_SET:
+    INSTALLED_APPS.append("mimir")
 if "MXR" in ENABLED_APPS_SET:
     INSTALLED_APPS.append("mxr")
 if "BIFROST" in ENABLED_APPS_SET:

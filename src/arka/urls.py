@@ -70,6 +70,10 @@ if "nettools" in settings.INSTALLED_APPS:
     urlpatterns += [
         path("NETTOOLS/", include(("nettools.urls", "nettools"), namespace="nettools")),
     ]
+if "mimir" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path("MIMIR/", include(("mimir.urls", "mimir"), namespace="mimir")),
+    ]
 if "mxr" in settings.INSTALLED_APPS:
     urlpatterns += [
         path("MXRemastered/", include(("mxr.urls", "mxr"), namespace="mxr")),
