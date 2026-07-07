@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # celery_init.sh
+# Usage: celery_init.sh <worker|beat> [queue_name]
+#   queue_name  — Celery queue to consume (e.g. imapsync, mimir).
+#                 Omit or empty to consume the default queue only.
 set -euo pipefail
 
 ROLE="${1:-worker}"
+QUEUE="${2:-}"
 APP_DIR="/app"
 LOGFILE="$APP_DIR/celery_init.txt"
 
@@ -12,7 +16,7 @@ PYTHON_BIN="$VENV_BIN/python"
 CELERY_BIN="$VENV_BIN/celery"
 
 {
-    echo "--- celery_init.sh started at $(date) as role: $ROLE ---"
+    echo "--- celery_init.sh started at $(date) as role: $ROLE queue: ${QUEUE:-default} ---"
     echo "[DEBUG] Current user: $(id)"
 
     # Wait for migrations to be ready
@@ -32,10 +36,17 @@ case "$ROLE" in
     echo "Starting Celery worker..." | tee -a "$LOGFILE"
     echo "Pool type: $CELERY_POOL" | tee -a "$LOGFILE"
 
+    # Build queue argument if specified
+    QUEUE_ARGS=""
+    if [ -n "$QUEUE" ]; then
+      QUEUE_ARGS="-Q $QUEUE"
+      echo "Consuming queue: $QUEUE" | tee -a "$LOGFILE"
+    fi
+
     if [ "${DJANGO_ENV:-development}" = "production" ]; then
       echo "Production worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
-        -A forj.celery worker \
+        -A forj.celery worker $QUEUE_ARGS \
         --pool=${CELERY_POOL} \
         -c 25 \
         --hostname=worker@%h \
@@ -47,7 +58,7 @@ case "$ROLE" in
     else
       echo "Development worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
-        -A forj.celery worker \
+        -A forj.celery worker $QUEUE_ARGS \
         --pool=${CELERY_POOL} \
         --hostname=worker@%h \
         --without-gossip --without-mingle --without-heartbeat \
