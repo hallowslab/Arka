@@ -24,6 +24,15 @@ chmod 2775 "$ARKA_LOGDIR" "$STATIC_ROOT" || true
 # Ensure existing files are group-writable
 chmod -R g+w "$ARKA_LOGDIR" "$STATIC_ROOT" || true
 
+# Ensure MIMIR data directories exist and are writable
+if [ -n "${MIMIR_INPUT_DIR:-}" ] && [ -n "${MIMIR_REPORT_DIR:-}" ]; then
+    echo "[ENTRYPOINT] Ensuring permissions for MIMIR data directories..."
+    mkdir -p "$MIMIR_INPUT_DIR" "$MIMIR_REPORT_DIR"
+    chgrp -R "$GROUP_ID" "$MIMIR_INPUT_DIR" "$MIMIR_REPORT_DIR" || true
+    chmod 2775 "$MIMIR_INPUT_DIR" "$MIMIR_REPORT_DIR" || true
+    chmod -R g+w "$MIMIR_INPUT_DIR" "$MIMIR_REPORT_DIR" || true
+fi
+
 if [ -x /app/scripts/copy_secrets.sh ]; then
     echo "[ENTRYPOINT] Copying secrets before dropping privileges"
     export TARGET_USER
