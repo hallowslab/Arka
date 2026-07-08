@@ -677,8 +677,8 @@ wheels = [
 
 [[package]]
 name = "mimir"
-version = "0.1.0"
-source = { git = "https://github.com/hallowslab/MIMIR.git?branch=dev#2f1de75861d8db7fc79376df38c8e06f806f9dfe" }
+version = "0.1.1"
+source = { git = "https://github.com/hallowslab/MIMIR.git?branch=dev#ae09c0b41e74b7ad3b638e7c964283562e10e7f5" }
 dependencies = [
     { name = "django" },
 ]
