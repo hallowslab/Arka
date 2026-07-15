@@ -8,7 +8,7 @@ set -euo pipefail
 ROLE="${1:-worker}"
 QUEUE="${2:-}"
 APP_DIR="/app"
-LOGFILE="$APP_DIR/celery_init.txt"
+LOGFILE="$ARKA_LOGDIR/celery_init_${ROLE}_${QUEUE:-default}.txt"
 
 # Explicitly use the virtualenv binaries
 VENV_BIN="$APP_DIR/.venv/bin"
@@ -52,7 +52,10 @@ case "$ROLE" in
         MONTH=$(date +%m)
         GEOIP_URL="https://download.db-ip.com/free/dbip-city-lite-${YEAR}-${MONTH}.mmdb.gz"
         mkdir -p /usr/share/GeoIP
-        curl -fsSL "$GEOIP_URL" | gunzip > "$GEOIP_DB"
+        MIMIR_VERSION=$(grep -oP '__version__ = "\K[^"]+' /app/src/modular_apps/MIMIR/mimir/_version.py) | tee -a "$LOGFILE"
+        echo "Using MIMIR version: $MIMIR_VERSION" | tee -a "$LOGFILE"
+        echo "Downloading from: $GEOIP_URL" | tee -a "$LOGFILE"
+        curl -fsSL -A "MIMIR/${MIMIR_VERSION}" "$GEOIP_URL" | gunzip > "$GEOIP_DB"
         echo "GeoIP database downloaded to $GEOIP_DB" | tee -a "$LOGFILE"
       fi
     fi
