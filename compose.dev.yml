@@ -25,6 +25,7 @@ services:
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
       - ./data/mimir:/app/data/mimir
+      - geoip_data_dev:/usr/share/GeoIP:ro
       - type: bind
         source: ./secrets
         target: /run/secrets
