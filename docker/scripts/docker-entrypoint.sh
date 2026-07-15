@@ -33,6 +33,14 @@ if [ -n "${MIMIR_INPUT_DIR:-}" ] && [ -n "${MIMIR_REPORT_DIR:-}" ]; then
     chmod -R g+w "$MIMIR_INPUT_DIR" "$MIMIR_REPORT_DIR" || true
 fi
 
+# Ensure GeoIP database directory exists
+if [ -n "${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}" ]; then
+    GEOIP_DIR=$(dirname "$MIMIR_GEOIP_DB_PATH")
+    mkdir -p "$GEOIP_DIR"
+    chgrp -R "$GROUP_ID" "$GEOIP_DIR" || true
+    chmod 2775 "$GEOIP_DIR" || true
+fi
+
 if [ -x /app/scripts/copy_secrets.sh ]; then
     echo "[ENTRYPOINT] Copying secrets before dropping privileges"
     export TARGET_USER

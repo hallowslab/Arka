@@ -116,6 +116,7 @@ services:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=arka
       - PYTHONPATH=/app/src
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     expose:
       - "8000"
     depends_on:
@@ -126,7 +127,7 @@ services:
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root:$STATIC_ROOT
-      - ./data/mimir:/app/data/mimir
+      - data:/app/data
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -154,6 +155,7 @@ services:
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=forj
       - PYTHONPATH=/app/src
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     depends_on:
       - rabbitmq
       - postgres
@@ -197,7 +199,7 @@ services:
       mode: global
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - ./data/mimir:/app/data/mimir
+      - data:/app/data
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -338,3 +340,4 @@ volumes:
   rabbitmq_data:
   shared_logs:
   grafana_data:
+  data:

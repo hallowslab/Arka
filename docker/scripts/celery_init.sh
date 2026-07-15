@@ -45,7 +45,7 @@ case "$ROLE" in
 
     # Download GeoIP database for MIMIR worker if not present
     if [ "$QUEUE" = "mimir" ]; then
-      GEOIP_DB="/app/data/mimir/dbip-city-lite.mmdb"
+      GEOIP_DB="${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}"
       if [ ! -f "$GEOIP_DB" ]; then
         echo "Downloading GeoIP database..." | tee -a "$LOGFILE"
         YEAR=$(date +%Y)

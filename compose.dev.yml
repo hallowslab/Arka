@@ -18,13 +18,14 @@ services:
       - STATIC_ROOT=/var/www/static
       - ENABLED_APPS=${ENABLED_APPS:-""}
       - CONTAINER_USER=root
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root_dev:/var/www/static
       - ./src:/app/src
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
-      - ./data/mimir:/app/data/mimir
+      - data_dev:/app/data
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -46,6 +47,7 @@ services:
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - CONTAINER_USER=root
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -70,6 +72,7 @@ services:
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - CONTAINER_USER=root
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -94,12 +97,13 @@ services:
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - CONTAINER_USER=root
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
-      - ./data/mimir:/app/data/mimir
+      - data_dev:/app/data
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -119,6 +123,7 @@ services:
       - CELERY_POOL=${CELERY_POOL:-solo}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - CONTAINER_USER=root
+      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -135,3 +140,4 @@ volumes:
   static_root_dev:
   rabbitmq_data_dev:
   shared_logs_dev:
+  data_dev:
