@@ -43,6 +43,20 @@ case "$ROLE" in
       echo "Consuming queue: $QUEUE" | tee -a "$LOGFILE"
     fi
 
+    # Download GeoIP database for MIMIR worker if not present
+    if [ "$QUEUE" = "mimir" ]; then
+      GEOIP_DB="/usr/share/GeoIP/dbip-city-lite.mmdb"
+      if [ ! -f "$GEOIP_DB" ]; then
+        echo "Downloading GeoIP database..." | tee -a "$LOGFILE"
+        YEAR=$(date +%Y)
+        MONTH=$(date +%m)
+        GEOIP_URL="https://download.db-ip.com/free/dbip-city-lite-${YEAR}-${MONTH}.mmdb.gz"
+        mkdir -p /usr/share/GeoIP
+        curl -fsSL "$GEOIP_URL" | gunzip > "$GEOIP_DB"
+        echo "GeoIP database downloaded to $GEOIP_DB" | tee -a "$LOGFILE"
+      fi
+    fi
+
     if [ "${DJANGO_ENV:-development}" = "production" ]; then
       echo "Production worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \

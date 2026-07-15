@@ -235,6 +235,7 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 5
 CELERY_TASK_ROUTES: dict = {
     "pymap.tasks.run_imap_sync": {"queue": "imapsync"},
     "mimir.tasks.analyze_log_file": {"queue": "mimir"},
+    "mimir.tasks.update_geoip_database": {"queue": "mimir"},
 }
 
 # RabbitMQ 4.3+ Compatibility (Avoid transient non-exclusive queues)

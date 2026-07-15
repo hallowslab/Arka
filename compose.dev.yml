@@ -100,6 +100,7 @@ services:
       - ./pyproject.toml:/app/pyproject.toml
       - ./uv.lock:/app/uv.lock
       - ./data/mimir:/app/data/mimir
+      - geoip_data_dev:/usr/share/GeoIP
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -135,3 +136,4 @@ volumes:
   static_root_dev:
   rabbitmq_data_dev:
   shared_logs_dev:
+  geoip_data_dev:
