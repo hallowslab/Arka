@@ -45,14 +45,16 @@ case "$ROLE" in
 
     # Download GeoIP database for MIMIR worker if not present
     if [ "$QUEUE" = "mimir" ]; then
-      GEOIP_DB="/usr/share/GeoIP/dbip-city-lite.mmdb"
+      GEOIP_DB="/app/data/mimir/dbip-city-lite.mmdb"
       if [ ! -f "$GEOIP_DB" ]; then
         echo "Downloading GeoIP database..." | tee -a "$LOGFILE"
         YEAR=$(date +%Y)
         MONTH=$(date +%m)
         GEOIP_URL="https://download.db-ip.com/free/dbip-city-lite-${YEAR}-${MONTH}.mmdb.gz"
-        mkdir -p /usr/share/GeoIP
-        MIMIR_VERSION=$(grep -oP '__version__ = "\K[^"]+' /app/src/modular_apps/MIMIR/mimir/_version.py) | tee -a "$LOGFILE"
+        mkdir -p /app/data/mimir
+        MIMIR_VERSION=$(grep -oP '__version__ = "\K[^"]+' /app/src/modular_apps/MIMIR/mimir/_version.py 2>/dev/null || \
+                        "$PYTHON_BIN" -c "from importlib.metadata import version; print(version('mimir'))" 2>/dev/null || \
+                        echo "unknown")
         echo "Using MIMIR version: $MIMIR_VERSION" | tee -a "$LOGFILE"
         echo "Downloading from: $GEOIP_URL" | tee -a "$LOGFILE"
         curl -fsSL -A "MIMIR/${MIMIR_VERSION}" "$GEOIP_URL" | gunzip > "$GEOIP_DB"

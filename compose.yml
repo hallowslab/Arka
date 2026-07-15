@@ -127,7 +127,6 @@ services:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root:$STATIC_ROOT
       - ./data/mimir:/app/data/mimir
-      - geoip_data:/usr/share/GeoIP:ro
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -199,7 +198,6 @@ services:
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./data/mimir:/app/data/mimir
-      - geoip_data:/usr/share/GeoIP
       - type: bind
         source: ./secrets
         target: /run/secrets
@@ -340,4 +338,3 @@ volumes:
   rabbitmq_data:
   shared_logs:
   grafana_data:
-  geoip_data:
