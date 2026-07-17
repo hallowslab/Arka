@@ -45,7 +45,6 @@ RUN addgroup --gid $GID $GROUPNAME && \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv/bin/uv
 
 # Create required directories and set ownership
-# Using 777 for logs and static to ensure compatibility with named volumes on all platforms
 RUN mkdir -p /app/scripts /app/src "$ARKA_LOGDIR" "$STATIC_ROOT" && \
     chown -R arka:$GROUPNAME /app "$ARKA_LOGDIR" "$STATIC_ROOT" && \
     chmod -R 775 /app "$ARKA_LOGDIR" "$STATIC_ROOT"
@@ -67,9 +66,12 @@ ENV DJANGO_ENV=${DJANGO_ENV} \
     ENABLED_APPS=${ENABLED_APPS}
 # imapsync & goaccess available in dev for testing
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
-RUN apt-get update && apt-get install --no-install-recommends -y \
+# Install goaccess only if MIMIR is enabled
+RUN if echo "$ENABLED_APPS" | grep -iq "MIMIR"; then \
+    apt-get update && apt-get install --no-install-recommends -y \
     goaccess \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*; \
+fi
 COPY pyproject.toml uv.lock* README.md ./
 # We don't copy modular apps yet to ensure uv sync can fetch git versions first
 RUN uv sync --frozen && \
@@ -167,6 +169,7 @@ CMD ["/app/scripts/celery_init.sh", "worker"]
 
 # Stage 8: Production MIMIR Worker (dedicated mimir queue)
 FROM production-base AS final-production-mimir-worker
+# Here we always install goaccess since this worker only accepts the queue for MIMIR, which requires goaccess for log analysis
 RUN apt-get update && apt-get install --no-install-recommends -y \
     goaccess \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
