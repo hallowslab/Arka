@@ -144,13 +144,13 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-prefork}
+        CELERY_POOL: ${CELERY_POOL:-threads}
     env_file:
       - mimir.env
       - pymap.env
     environment:
       - DJANGO_ENV=${DJANGO_ENV:-production}
-      - CELERY_POOL=${CELERY_POOL:-prefork}
+      - CELERY_POOL=${CELERY_POOL:-threads}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
       - CONTAINER_USER=forj
