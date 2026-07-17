@@ -1,12 +1,16 @@
-# New 
-
-
-
 ## Docker:
 
 - Development: `docker compose --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
-- Development(W-Monitor): `docker compose --profile monitor --env-file .\dev.env -f .\compose.yml -f .\compose.dev.yml up --build -d`
 - Production: `docker compose --env-file .\.env up --build -d`
+
+To use profiles define the variable COMPOSE_PROFILES in .env or dev.env
+Available profiles:
+- "pymap" for the forj-imapsync container (required for the imapsync queue)
+- "mimir" for the forj-mimir container (required for the mimir queue)
+- "tools" for pgadmin and rinsight
+- "dovecot" for local mail servers to test pymap
+- "monitor" for prometheus and it's exporters
+- "monitor-dashboard" for grafana
 
 
 ### Side notes
