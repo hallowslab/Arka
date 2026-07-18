@@ -18,7 +18,6 @@ class Command(BaseCommand):
         model: type[Model] | None = None,
         group_permissions: list[str] | None = None,
     ) -> None:
-
         def has_permission(group: Group, perm: Permission) -> bool:
             return group.permissions.filter(codename=perm.codename).exists()
 
