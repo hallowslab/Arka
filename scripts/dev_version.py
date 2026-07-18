@@ -72,7 +72,7 @@ def main():
 
         try:
             # Running from root directory for consistent path resolution
-            subprocess.run(
+            sub = subprocess.run(
                 [
                     "uv",
                     "run",
@@ -83,6 +83,8 @@ def main():
                     str(pyproject),
                     "-o",
                     str(output),
+                    "-s",
+                    "pyproject"
                 ],
                 check=True,
                 cwd=str(root_dir),
@@ -90,6 +92,7 @@ def main():
                 text=True,
             )
             print(f"    [+] Success")
+            print(sub.stdout.strip())
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr.strip() or e.stdout.strip() or str(e)
             print(f"    [!] Error: {error_msg}")

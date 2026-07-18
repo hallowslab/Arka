@@ -3,48 +3,21 @@ import sys
 import subprocess
 from pathlib import Path
 
-def load_env(env_path):
-    """
-    Manually load environment variables from a .env file.
-    """
-    if not env_path.exists():
-        print(f"Warning: {env_path} not found.")
-        return
-    with open(env_path) as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            # Remove surrounding quotes from value
-            value = value.strip('"').strip("'")
-            os.environ[key] = value
+from env import load_project_env, get_enabled_apps
 
 
 def main():
-    # Identify project paths
     script_dir = Path(__file__).resolve().parent
     root_dir = script_dir.parent
     src_dir = root_dir / "src"
-    env_file = root_dir / "dev.env"
 
     print(f"[*] ARKA Migration Helper Script")
     print(f"[*] Root directory: {root_dir}")
 
     # 1. Load .env
-    if env_file.exists():
-        print(f"[*] Loading environment variables from {env_file}...")
-        load_env(env_file)
-    else:
-        # Fallback to dev.env if .env doesn't exist
-        dev_env = root_dir / "dev.env"
-        if dev_env.exists():
-            print(f"[*] .env not found, loading from {dev_env}...")
-            load_env(dev_env)
+    load_project_env(root_dir)
 
-    # 2. Set mandatory environment variables for local migrations
+    # 2. Set mandatory environment variables for local management commands
     os.environ["DJANGO_ENV"] = "migrations"
     local_log_dir = root_dir / "ARKA_LOGS"
     local_log_dir.mkdir(exist_ok=True)
@@ -52,7 +25,7 @@ def main():
 
     print(f"[*] DJANGO_ENV set to 'migrations' (using SQLite)")
     print(f"[*] ARKA_LOGDIR set to {local_log_dir}")
-    print(f"[*] Modular apps enabled: {os.environ.get('ENABLED_APPS', '')}")
+    print(f"[*] Modular apps enabled: {', '.join(get_enabled_apps())}")
 
     if not src_dir.exists():
         print(f"[!] Error: 'src' directory not found at {src_dir}")
