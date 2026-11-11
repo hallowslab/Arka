@@ -37,5 +37,4 @@ def modular_apps(request):
     apps_list = [
         app for app in apps.get_app_configs() if getattr(app, "is_modular", False)
     ]
-    print(f"APPS LIST: {apps_list}")
     return {"modular_apps": apps_list}

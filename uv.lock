@@ -5,7 +5,7 @@ requires-python = ">=3.13, <4.0"
 [[package]]
 name = "aera"
 version = "0.2.0"
-source = { git = "https://github.com/hallowslab/AERA.git?branch=dev#a0bccd01460194ce4422b3040666c838b4dd43d0" }
+source = { git = "https://github.com/hallowslab/AERA.git?branch=dev#45cc54827496b9639f7e7e8dccb1e2ac2e1762c8" }
 dependencies = [
     { name = "django" },
 ]
@@ -136,7 +136,7 @@ wheels = [
 [[package]]
 name = "bifrost"
 version = "0.0.1"
-source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#9f62583d0af158f309436a43d0b9c816f928ecdd" }
+source = { git = "https://github.com/hallowslab/BIFROST.git?branch=dev#330e9635d59ef88b6c1626bf5f78a457f38f6f79" }
 dependencies = [
     { name = "django" },
 ]
@@ -358,7 +358,7 @@ wheels = [
 [[package]]
 name = "dbtool"
 version = "0.0.1"
-source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=dev#8a5d3375748c54eeb3d4f03e09a8455e0b70da48" }
+source = { git = "https://github.com/hallowslab/DBTOOL.git?branch=dev#56e005112c5be7b9d61ee79f4f996465fdff1cd1" }
 dependencies = [
     { name = "django" },
 ]
@@ -689,7 +689,7 @@ wheels = [
 [[package]]
 name = "mimir"
 version = "0.2.0"
-source = { git = "https://github.com/hallowslab/MIMIR.git?branch=dev#db59ebf10859dfdf7d823b62417fab60618966f0" }
+source = { git = "https://github.com/hallowslab/MIMIR.git?branch=dev#bcdcd05f711276db3c1209a2bff69b577eaefbca" }
 dependencies = [
     { name = "django" },
 ]
@@ -706,7 +706,7 @@ wheels = [
 [[package]]
 name = "mxr"
 version = "0.1.0"
-source = { git = "https://github.com/hallowslab/MXR.git?branch=dev#e4b6e03fdb36af943d816c141ac8925d0fcfeacf" }
+source = { git = "https://github.com/hallowslab/MXR.git?branch=dev#7b12773a3c9c984e77e6a4fc52f38f3f41a9fb8b" }
 dependencies = [
     { name = "django" },
 ]
@@ -750,7 +750,7 @@ wheels = [
 [[package]]
 name = "nettools"
 version = "0.1.1"
-source = { git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev#9ad95048e9a456dca32dba82e6523a6f123c7efe" }
+source = { git = "https://github.com/hallowslab/NETTOOLS.git?branch=dev#ae3c5f7280a517a9364257799fc31012095c065a" }
 dependencies = [
     { name = "django" },
     { name = "dnspython" },
@@ -909,7 +909,7 @@ wheels = [
 [[package]]
 name = "pymap"
 version = "0.5.1"
-source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#1c4c98898184ca515def00ec3825a8c23b6b5855" }
+source = { git = "https://github.com/hallowslab/Pymap.git?branch=modularize#b5f27f4ff313e23391f486b582be1f15334265ac" }
 dependencies = [
     { name = "django" },
     { name = "imapsync-scriptgen" },

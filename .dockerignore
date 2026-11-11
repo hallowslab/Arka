@@ -16,8 +16,8 @@ config.dev.json
 # ARKA_LOGS
 ARKA_LOGS/
 
-# Git
-.git
+# Git (root and nested app repositories)
+**/.git/
 .gitignore
 .gitattributes
 
@@ -88,11 +88,10 @@ docs/_build/
 # PyBuilder
 target/
 
-# ruff
-.ruff_cache/
-
-# mypy
-.mypy_cache/
+# ruff / mypy / pytest (root and nested app directories)
+**/.ruff_cache/
+**/.mypy_cache/
+**/.pytest_cache/
 
 # Virtual environment
 .env
