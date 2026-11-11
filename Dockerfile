@@ -59,10 +59,8 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 FROM base AS development
 ARG ENABLED_APPS=""
 ARG MODULE_SOURCE=git
-ARG CELERY_POOL=solo
 ARG DJANGO_ENV=development
 ENV DJANGO_ENV=${DJANGO_ENV} \
-    CELERY_POOL=${CELERY_POOL} \
     ENABLED_APPS=${ENABLED_APPS}
 # imapsync & goaccess available in dev for testing
 COPY --from=imapsync_binary /usr/bin/imapsync /usr/bin/imapsync
@@ -132,15 +130,11 @@ FROM base AS production-base
 
 ARG ENABLED_APPS=""
 ARG DJANGO_ENV=production
-ARG CELERY_POOL=prefork
 
+# CELERY_POOL / CELERY_CONCURRENCY are supplied at runtime per service,
+# so one image can run any pool (gevent, prefork, threads, solo).
 ENV DJANGO_ENV=${DJANGO_ENV} \
-    CELERY_POOL=${CELERY_POOL} \
-    ENABLED_APPS=${ENABLED_APPS} \
-    POSTGRES_DB=${POSTGRES_DB} \
-    POSTGRES_USER=${POSTGRES_USER} \
-    POSTGRES_HOST=${POSTGRES_HOST} \
-    POSTGRES_PORT=${POSTGRES_PORT}
+    ENABLED_APPS=${ENABLED_APPS}
 
 COPY --from=production-builder /app/.venv /app/.venv
 COPY src/arka /app/src/arka

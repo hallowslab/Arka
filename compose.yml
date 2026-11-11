@@ -1,3 +1,14 @@
+# Shared Celery worker environment.
+# CELERY_POOL / CELERY_CONCURRENCY are set per service so workers can use
+# different pools (gevent for I/O, prefork for subprocess/CPU work).
+x-forj-env: &forj_env
+  DJANGO_ENV: ${DJANGO_ENV:-production}
+  ARKA_LOGDIR: ${ARKA_LOGDIR:-/app/ARKA_LOGS}
+  DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-arka.settings}
+  CONTAINER_USER: forj
+  PYTHONPATH: /app/src
+  MIMIR_GEOIP_DB_PATH: ${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+
 services:
   # ---------- Cache ----------
   redis:
@@ -47,8 +58,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-arka}
       POSTGRES_USER: ${POSTGRES_USER:-arka}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST: ${POSTGRES_HOST:-127.0.0.1}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arka} -d ${POSTGRES_DB:-arka}" ]
       interval: 5s
@@ -61,7 +70,8 @@ services:
     image: pgbouncer/pgbouncer:latest
     container_name: arka-pgbouncer
     environment:
-      - DATABASES_HOST=${POSTGRES_HOST:-postgres}
+      # POSTGRES_HOST is the *upstream* Postgres service name, not the app connection.
+      - DATABASES_HOST=${POSTGRES_HOST:-arka-postgres}
       - DATABASES_PORT=${POSTGRES_PORT:-5432}
       - DATABASES_USER=${POSTGRES_USER}
       - DATABASES_PASSWORD=${POSTGRES_PASSWORD}
@@ -83,8 +93,9 @@ services:
         GID: 10002
         GROUPNAME: ${CONTAINER_GROUP:-arka}
     ports:
-      - "5001:80"
-      - "5000:443"
+      # Loopback only. External access is exclusively through the Cloudflare Tunnel.
+      - "127.0.0.1:5001:80"
+      - "127.0.0.1:5000:443"
     restart: unless-stopped
     environment:
       STATIC_ROOT: ${STATIC_ROOT}
@@ -106,10 +117,10 @@ services:
       - mimir.env
       - pymap.env
     environment:
+      # DB connection is defined in secrets/config.json + secrets/.pg_service.conf
+      # (service "arka" -> host arka-pgbouncer, port 6432). No POSTGRES_* host here.
       - POSTGRES_DB=${POSTGRES_DB:-arka}
       - POSTGRES_USER=${POSTGRES_USER:-arka}
-      - POSTGRES_HOST=pgbouncer-arka
-      - POSTGRES_PORT=6432
       - DJANGO_ENV=${DJANGO_ENV:-production}
       - STATIC_ROOT=${STATIC_ROOT}
       - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
@@ -144,18 +155,13 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-threads}
     env_file:
       - mimir.env
       - pymap.env
     environment:
-      - DJANGO_ENV=${DJANGO_ENV:-production}
-      - CELERY_POOL=${CELERY_POOL:-threads}
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-arka.settings}
-      - CONTAINER_USER=forj
-      - PYTHONPATH=/app/src
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *forj_env
+      CELERY_POOL: ${FORJ_CELERY_POOL:-gevent}
+      CELERY_CONCURRENCY: ${FORJ_CELERY_CONCURRENCY:-25}
     depends_on:
       - rabbitmq
       - postgres
@@ -179,7 +185,10 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-prefork}
+    environment:
+      <<: *forj_env
+      CELERY_POOL: ${IMAPSYNC_CELERY_POOL:-prefork}
+      CELERY_CONCURRENCY: ${IMAPSYNC_CELERY_CONCURRENCY:-25}
     deploy:
       mode: replicated
       replicas: ${IMAPSYNC_WORKER_REPLICAS:-1}
@@ -196,9 +205,13 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-prefork}
+    environment:
+      <<: *forj_env
+      CELERY_POOL: ${MIMIR_CELERY_POOL:-prefork}
+      CELERY_CONCURRENCY: ${MIMIR_CELERY_CONCURRENCY:-25}
     deploy:
-      mode: global
+      mode: replicated
+      replicas: ${MIMIR_WORKER_REPLICAS:-1}
     volumes:
       - shared_logs:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - data:/app/data
@@ -212,8 +225,9 @@ services:
   # ---------- Forj-beat ----------
   forj-scheduler:
     <<: *forj_base
+    # Beat must always run exactly once. Never scale this service.
     deploy:
-      mode: global
+      replicas: 1
     depends_on:
       - forj
     volumes:
@@ -250,7 +264,7 @@ services:
     container_name: arka-prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     profiles:
@@ -261,7 +275,7 @@ services:
     container_name: arka-grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml
@@ -326,14 +340,14 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@arka.internal}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-PGAdmin}
     ports:
-      - 9001:80
+      - "127.0.0.1:9001:80"
     profiles:
       - tools
   rinsight:
     image: redislabs/redisinsight:latest
     restart: always
     ports:
-      - 5540:5540
+      - "127.0.0.1:5540:5540"
     profiles:
       - tools
 

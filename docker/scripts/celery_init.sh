@@ -7,6 +7,23 @@ set -euo pipefail
 
 ROLE="${1:-worker}"
 QUEUE="${2:-}"
+
+# Per-worker pool configuration (compose sets these per service).
+POOL="${CELERY_POOL:-prefork}"
+CONCURRENCY="${CELERY_CONCURRENCY:-25}"
+
+# -c is not valid for the solo pool; max-tasks-per-child is prefork-only.
+if [ "$POOL" = "solo" ]; then
+  CONCURRENCY_ARGS=""
+else
+  CONCURRENCY_ARGS="-c $CONCURRENCY"
+fi
+if [ "$POOL" = "prefork" ]; then
+  RECYCLE_ARGS="--max-tasks-per-child=5"
+else
+  RECYCLE_ARGS=""
+fi
+
 APP_DIR="/app"
 LOGFILE="$ARKA_LOGDIR/celery_init_${ROLE}_${QUEUE:-default}.txt"
 
@@ -34,7 +51,7 @@ CELERY_BIN="$VENV_BIN/celery"
 case "$ROLE" in
   worker)
     echo "Starting Celery worker..." | tee -a "$LOGFILE"
-    echo "Pool type: $CELERY_POOL" | tee -a "$LOGFILE"
+    echo "Pool type: $POOL (concurrency: $CONCURRENCY)" | tee -a "$LOGFILE"
 
     # Build queue argument if specified
     QUEUE_ARGS=""
@@ -66,10 +83,9 @@ case "$ROLE" in
       echo "Production worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
         -A forj.celery worker $QUEUE_ARGS \
-        --pool=${CELERY_POOL} \
-        -c 25 \
+        --pool="$POOL" $CONCURRENCY_ARGS \
         --hostname=worker@%h \
-        --max-tasks-per-child=5 \
+        $RECYCLE_ARGS \
         --time-limit=14700 \
         --soft-time-limit=14400 \
         --without-gossip --without-mingle --without-heartbeat \
@@ -78,7 +94,7 @@ case "$ROLE" in
       echo "Development worker mode" | tee -a "$LOGFILE"
       exec "$CELERY_BIN" \
         -A forj.celery worker $QUEUE_ARGS \
-        --pool=${CELERY_POOL} \
+        --pool="$POOL" $CONCURRENCY_ARGS \
         --hostname=worker@%h \
         --without-gossip --without-mingle --without-heartbeat \
         --loglevel=DEBUG

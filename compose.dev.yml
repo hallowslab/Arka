@@ -1,3 +1,11 @@
+# Shared development environment. Pool default is solo for easy debugging;
+# override *_CELERY_POOL to test gevent/threads/prefork locally.
+x-dev-env: &dev_env
+  DJANGO_ENV: development
+  ARKA_LOGDIR: ${ARKA_LOGDIR:-/app/ARKA_LOGS}
+  CONTAINER_USER: root
+  MIMIR_GEOIP_DB_PATH: ${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+
 services:
   rabbitmq:
     volumes:
@@ -13,12 +21,9 @@ services:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
     environment:
-      - DJANGO_ENV=development
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - STATIC_ROOT=/var/www/static
-      - ENABLED_APPS=${ENABLED_APPS:-""}
-      - CONTAINER_USER=root
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *dev_env
+      STATIC_ROOT: /var/www/static
+      ENABLED_APPS: ${ENABLED_APPS:-""}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - static_root_dev:/var/www/static
@@ -31,7 +36,7 @@ services:
         target: /run/secrets
         read_only: true
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     command: /app/scripts/django_init.sh
 
   forj:
@@ -41,13 +46,10 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
-      - DJANGO_ENV=development
-      - CELERY_POOL=${CELERY_POOL:-solo}
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - CONTAINER_USER=root
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *dev_env
+      CELERY_POOL: ${FORJ_CELERY_POOL:-solo}
+      CELERY_CONCURRENCY: ${FORJ_CELERY_CONCURRENCY:-25}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -66,13 +68,10 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
-      - DJANGO_ENV=development
-      - CELERY_POOL=${CELERY_POOL:-solo}
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - CONTAINER_USER=root
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *dev_env
+      CELERY_POOL: ${IMAPSYNC_CELERY_POOL:-solo}
+      CELERY_CONCURRENCY: ${IMAPSYNC_CELERY_CONCURRENCY:-25}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -91,13 +90,10 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
-      - DJANGO_ENV=development
-      - CELERY_POOL=${CELERY_POOL:-solo}
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - CONTAINER_USER=root
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *dev_env
+      CELERY_POOL: ${MIMIR_CELERY_POOL:-solo}
+      CELERY_CONCURRENCY: ${MIMIR_CELERY_CONCURRENCY:-25}
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
@@ -117,13 +113,8 @@ services:
       args:
         ENABLED_APPS: ${ENABLED_APPS:-""}
         MODULE_SOURCE: ${MODULE_SOURCE:-git}
-        CELERY_POOL: ${CELERY_POOL:-solo}
     environment:
-      - DJANGO_ENV=development
-      - CELERY_POOL=${CELERY_POOL:-solo}
-      - ARKA_LOGDIR=${ARKA_LOGDIR:-/app/ARKA_LOGS}
-      - CONTAINER_USER=root
-      - MIMIR_GEOIP_DB_PATH=${MIMIR_GEOIP_DB_PATH:-/app/data/mimir/dbip-city-lite.mmdb}
+      <<: *dev_env
     volumes:
       - shared_logs_dev:${ARKA_LOGDIR:-/app/ARKA_LOGS}
       - ./src:/app/src
